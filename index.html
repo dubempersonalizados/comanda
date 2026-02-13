@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pedidos - Estamparia</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --whatsapp: #25d366; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1000px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin: auto; }
+        h2 { color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-top: 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; }
+        label { font-weight: 600; font-size: 13px; margin-bottom: 5px; color: #555; }
+        input, select, textarea { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        
+        .quadros-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 25px 0; }
+        .quadro { border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+        .quadro h4 { margin: 0 0 10px 0; color: var(--primary); text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .medida-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .medida-linha input { width: 60px; text-align: center; padding: 5px; }
+
+        .total-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: right; font-size: 18px; margin-bottom: 20px; }
+
+        canvas#canvas-assinatura { border: 2px dashed #ccc; border-radius: 8px; background: #fff; cursor: crosshair; width: 100%; height: 80px; touch-action: none; }
+        
+        .buttons { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-print { background: #34495e; color: white; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        @media print {
+            .no-print, button, .limpar-btn { display: none !important; }
+            body { padding: 0; background: white; }
+            .container { box-shadow: none; border: none; width: 100%; }
+            canvas#canvas-assinatura { border: 1px solid #000; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Pedido Nº: <span id="display-numero">Carregando...</span></h2>
+    
+    <div class="grid">
+        <div class="field"><label>Data</label><input type="text" id="data" class="mask-date" placeholder="dd/mm/aaaa"></div>
+        <div class="field" style="grid-column: span 2;"><label>Cliente</label><input type="text" id="cliente"></div>
+        <div class="field"><label>Produto</label><input type="text" id="produto"></div>
+    </div>
+
+    <div class="grid">
+        <div class="field"><label>Valor Total</label><input type="text" id="valor" class="mask-money" oninput="calcAReceber()"></div>
+        <div class="field"><label>Recebido</label><input type="text" id="recebido" class="mask-money" oninput="calcAReceber()"></div>
+        <div class="field"><label>À Receber</label><input type="text" id="aReceber" class="mask-money" readonly></div>
+        <div class="field">
+            <label>Forma</label>
+            <select id="forma">
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Pix">Pix</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="field"><label>2ª Parcela</label><input type="text" id="segundaParcela" class="mask-money" oninput="calcAReceber()"></div>
+        <div class="field">
+            <label>Forma 2</label>
+            <select id="forma2">
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Pix">Pix</option>
+            </select>
+        </div>
+        <div class="field"><label>Data 2ª Parcela</label><input type="text" id="data2Parcela" class="mask-date"></div>
+        <div class="field"><label>Prev. Entrega</label><input type="text" id="prevEntrega" class="mask-date"></div>
+    </div>
+
+    <div class="grid">
+        <div class="field"><label>Sublimação</label>
+            <select id="sublimacao">
+                <option>A3</option><option>Total</option><option>Parcial</option><option>Sem Estampa</option><option>DTF</option>
+            </select>
+        </div>
+        <div class="field"><label>Gola</label>
+            <select id="gola">
+                <option>V</option><option>Redonda</option><option>Polo</option><option>Itapagé</option><option>Farda</option><option>Alta</option><option>Outros</option><option>Casaco</option>
+            </select>
+        </div>
+        <div class="field"><label>Tecido</label>
+            <select id="tecido">
+                <option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca Colegial</option><option>Helanquinha Lite</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Aquarela</option><option>PP Cor</option><option>PP Elastano</option><option>Tactel Cor</option><option>Tactel Branco</option><option>Outros</option>
+            </select>
+        </div>
+        <div class="field"><label>Designer</label>
+            <select id="designer"><option>Pedro</option><option>Roger</option><option>Loja</option></select>
+        </div>
+    </div>
+
+    <div class="quadros-wrapper">
+        <div class="quadro">
+            <h4>Básicas</h4>
+            <div class="medida-linha">PP <input type="number" class="qtd"></div>
+            <div class="medida-linha">P <input type="number" class="qtd"></div>
+            <div class="medida-linha">M <input type="number" class="qtd"></div>
+            <div class="medida-linha">G <input type="number" class="qtd"></div>
+            <div class="medida-linha">GG <input type="number" class="qtd"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd"></div>
+        </div>
+        <div class="quadro">
+            <h4>Baby</h4>
+            <div class="medida-linha">PP <input type="number" class="qtd"></div>
+            <div class="medida-linha">P <input type="number" class="qtd"></div>
+            <div class="medida-linha">M <input type="number" class="qtd"></div>
+            <div class="medida-linha">G <input type="number" class="qtd"></div>
+            <div class="medida-linha">GG <input type="number" class="qtd"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd"></div>
+        </div>
+        <div class="quadro">
+            <h4>Infantil</h4>
+            <div class="medida-linha">01 <input type="number" class="qtd"></div>
+            <div class="medida-linha">02 <input type="number" class="qtd"></div>
+            <div class="medida-linha">04 <input type="number" class="qtd"></div>
+            <div class="medida-linha">06 <input type="number" class="qtd"></div>
+            <div class="medida-linha">08 <input type="number" class="qtd"></div>
+            <div class="medida-linha">10 <input type="number" class="qtd"></div>
+            <div class="medida-linha">12 <input type="number" class="qtd"></div>
+        </div>
+    </div>
+
+    <div class="total-box">Quantidade Total: <span id="total-geral">0</span></div>
+
+    <div class="grid">
+        <div class="field"><label>Status</label><select id="status"><option>No Prazo</option><option>Entregue</option><option>Atrasado</option><option>Na Loja</option></select></div>
+        <div class="field"><label>Costura</label><select id="costura"><option>Clóvis</option><option>Dona Ge</option><option>Gláucia</option></select></div>
+        <div class="field"><label>Seção</label><select id="secao"><option>Estamparia</option><option>Balcão</option></select></div>
+        <div class="field"><label>Corte Gola</label><select id="corteGola"><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
+        <div class="field"><label>Corte Manga</label><select id="corteManga"><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
+    </div>
+
+    <div class="field"><label>Observação</label><textarea id="observacao" rows="2"></textarea></div>
+
+    <div class="field" style="margin-top:15px;">
+        <label>Assinatura (Cliente)</label>
+        <canvas id="canvas-assinatura"></canvas>
+        <button type="button" class="limpar-btn" onclick="limparAssinatura()" style="margin-top:5px; background:#ddd; color:#333; padding:5px; font-size:11px; width:100px; border-radius:4px;">Limpar</button>
+    </div>
+
+    <div class="buttons no-print">
+        <button class="btn-save" onclick="salvarDados()" id="btn-save">Salvar na Planilha</button>
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">Enviar via WhatsApp</button>
+        <button class="btn-print" onclick="window.print()">Imprimir Pedido</button>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby7nYY74QNOUFFBkwOCMF67llYpSx5wwchEP7BPo7gud4eIAReAbQDmxHmNArc3W8rH7A/exec';
+
+    const canvas = document.getElementById('canvas-assinatura');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        ctx.scale(ratio, ratio);
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 100);
+
+    let drawing = false;
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    window.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+
+    function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+
+    function calcAReceber() {
+        const parseMoney = (id) => {
+            let val = document.getElementById(id).value.replace(/\D/g, '');
+            return val ? parseFloat(val) / 100 : 0;
+        };
+        const total = parseMoney('valor');
+        const recebido = parseMoney('recebido');
+        const parcela2 = parseMoney('segundaParcela');
+        const result = total - recebido - parcela2;
+        document.getElementById('aReceber').value = result.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    document.querySelectorAll('.mask-money').forEach(el => {
+        el.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g,'');
+            e.target.value = (v/100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        });
+    });
+
+    document.querySelectorAll('.mask-date').forEach(el => {
+        el.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g,'').slice(0, 8);
+            if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
+            else if (v.length >= 3) v = v.replace(/(\d{2})(\d{0,2})/, "$1/$2");
+            e.target.value = v;
+        });
+    });
+
+    document.querySelectorAll('.qtd').forEach(input => {
+        input.addEventListener('input', () => {
+            let soma = 0;
+            document.querySelectorAll('.qtd').forEach(i => soma += (parseInt(i.value) || 0));
+            document.getElementById('total-geral').innerText = soma;
+        });
+    });
+
+    // NOVA FUNÇÃO: ENVIAR WHATSAPP
+    function enviarWhatsApp() {
+        const numPedido = document.getElementById('display-numero').innerText;
+        const cliente = document.getElementById('cliente').value;
+        const produto = document.getElementById('produto').value;
+        const totalQtd = document.getElementById('total-geral').innerText;
+        const vTotal = document.getElementById('valor').value;
+        const vRecebido = document.getElementById('recebido').value;
+        const vAReceber = document.getElementById('aReceber').value;
+        const dataEntrega = document.getElementById('prevEntrega').value;
+
+        if(!cliente) { alert("Por favor, preencha o nome do cliente."); return; }
+
+        const mensagem = `*RESUMO DO PEDIDO Nº ${numPedido}*%0A%0A` +
+            `*Cliente:* ${cliente}%0A` +
+            `*Produto:* ${produto}%0A` +
+            `*Quantidade:* ${totalQtd} unid.%0A%0A` +
+            `*Valor Total:* ${vTotal}%0A` +
+            `*Entrada:* ${vRecebido}%0A` +
+            `*À Receber:* ${vAReceber}%0A%0A` +
+            `*Previsão de Entrega:* ${dataEntrega}%0A%0A` +
+            `_Obrigado pela preferência!_`;
+
+        window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
+    }
+
+    window.onload = async () => {
+        try {
+            const response = await fetch(scriptURL);
+            const num = await response.text();
+            document.getElementById('display-numero').innerText = num;
+        } catch (e) { console.log("Erro ao carregar numero"); }
+    };
+
+    async function salvarDados() {
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true; btn.innerText = "Enviando...";
+        const dados = {
+            numero: document.getElementById('display-numero').innerText,
+            data: document.getElementById('data').value,
+            cliente: document.getElementById('cliente').value,
+            quantidadeTotal: document.getElementById('total-geral').innerText,
+            valor: document.getElementById('valor').value,
+            forma: document.getElementById('forma').value,
+            recebido: document.getElementById('recebido').value,
+            aReceber: document.getElementById('aReceber').value,
+            segundaParcela: document.getElementById('segundaParcela').value,
+            forma2: document.getElementById('forma2').value,
+            data2Parcela: document.getElementById('data2Parcela').value,
+            produto: document.getElementById('produto').value,
+            sublimacao: document.getElementById('sublimacao').value,
+            gola: document.getElementById('gola').value,
+            tecido: document.getElementById('tecido').value,
+            designer: document.getElementById('designer').value,
+            prevEntrega: document.getElementById('prevEntrega').value,
+            status: document.getElementById('status').value,
+            costura: document.getElementById('costura').value,
+            secao: document.getElementById('secao').value,
+            corteGola: document.getElementById('corteGola').value,
+            corteManga: document.getElementById('corteManga').value,
+            observacao: document.getElementById('observacao').value,
+            assinatura: canvas.toDataURL()
+        };
+        try {
+            await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
+            alert('Sucesso! Pedido salvo.');
+            location.reload();
+        } catch (e) {
+            alert('Erro ao salvar.');
+            btn.disabled = false; btn.innerText = "Salvar na Planilha";
+        }
+    }
+</script>
+</body>
+</html>
