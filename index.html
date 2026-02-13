@@ -94,6 +94,13 @@
                 <option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca Colegial</option><option>Helanquinha Lite</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Aquarela</option><option>PP Cor</option><option>PP Elastano</option><option>Tactel Cor</option><option>Tactel Branco</option><option>Outros</option>
             </select>
         </div>
+		 <div class="field"><label>Corte</label>
+            <select id="corte">
+                <option>Normal</option><option>Itapajé</option><option>Regata</option><option>Machão</option><option>Longa</option><option>Super Cavada</option><option>Outros</option><option>Casaco</option>
+            </select>
+        </div>
+		
+		
         <div class="field"><label>Designer</label>
             <select id="designer"><option>Pedro</option><option>Roger</option><option>Loja</option></select>
         </div>
@@ -136,8 +143,8 @@
         <div class="field"><label>Status</label><select id="status"><option>No Prazo</option><option>Entregue</option><option>Atrasado</option><option>Na Loja</option></select></div>
         <div class="field"><label>Costura</label><select id="costura"><option>Clóvis</option><option>Dona Ge</option><option>Gláucia</option></select></div>
         <div class="field"><label>Seção</label><select id="secao"><option>Estamparia</option><option>Balcão</option></select></div>
-        <div class="field"><label>Corte Gola</label><select id="corteGola"><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
-        <div class="field"><label>Corte Manga</label><select id="corteManga"><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
+        <div class="field"><label>Costura Gola</label><select id="costuraGola"><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
+        <div class="field"><label>Costura Manga</label><select id="costuraManga"><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
     </div>
 
     <div class="field"><label>Observação</label><textarea id="observacao" rows="2"></textarea></div>
@@ -283,8 +290,8 @@
             status: document.getElementById('status').value,
             costura: document.getElementById('costura').value,
             secao: document.getElementById('secao').value,
-            corteGola: document.getElementById('corteGola').value,
-            corteManga: document.getElementById('corteManga').value,
+            costuraGola: document.getElementById('costuraGola').value,
+            costuraManga: document.getElementById('costuraManga').value,
             observacao: document.getElementById('observacao').value,
             assinatura: canvas.toDataURL()
         };
