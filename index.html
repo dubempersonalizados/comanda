@@ -3,12 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Pedidos - Estamparia</title>
+    <title>Sistema de Pedidos - DUBEM</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --whatsapp: #25d366; }
+        :root { 
+            --primary: #2c3e50; 
+            --accent: #27ae60; 
+            --light: #ecf0f1; 
+            --whatsapp: #25d366;
+            --dubem-blue: #000080;
+        }
+        
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1000px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin: auto; }
-        h2 { color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-top: 0; }
+
+        /* CABEÇALHO APENAS COM A LOGO À ESQUERDA */
+        .header-dubem {
+            display: flex;
+            justify-content: flex-start; /* Alinhado à esquerda */
+            align-items: center;
+            border-bottom: 3px solid var(--light);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .brand-logo img {
+            max-height: 100px; /* Ajuste o tamanho conforme necessário */
+            width: auto;
+        }
+
+        h2 { color: var(--primary); font-size: 18px; margin-top: 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; }
         label { font-weight: 600; font-size: 13px; margin-bottom: 5px; color: #555; }
@@ -20,14 +42,14 @@
         .medida-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .medida-linha input { width: 60px; text-align: center; padding: 5px; }
 
-        .total-box { background: var(--primary); color: white; padding: 15px; border-radius: 8px; text-align: right; font-size: 18px; margin-bottom: 20px; }
+        .total-box { background: var(--dubem-blue); color: white; padding: 15px; border-radius: 8px; text-align: right; font-size: 18px; margin-bottom: 20px; }
 
         canvas#canvas-assinatura { border: 2px dashed #ccc; border-radius: 8px; background: #fff; cursor: crosshair; width: 100%; height: 80px; touch-action: none; }
         
         .buttons { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
         button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
         .btn-save { background: var(--accent); color: white; }
-        .btn-print { background: #34495e; color: white; }
+        .btn-print { background: var(--dubem-blue); color: white; }
         .btn-whatsapp { background: var(--whatsapp); color: white; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
 
@@ -42,6 +64,12 @@
 <body>
 
 <div class="container">
+    <header class="header-dubem">
+        <div class="brand-logo">
+            <img src="https://iili.io/qdBJFiF.jpg" alt="Logo Dubem">
+        </div>
+    </header>
+
     <h2>Pedido Nº: <span id="display-numero">Carregando...</span></h2>
     
     <div class="grid">
@@ -94,13 +122,6 @@
                 <option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca Colegial</option><option>Helanquinha Lite</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Aquarela</option><option>PP Cor</option><option>PP Elastano</option><option>Tactel Cor</option><option>Tactel Branco</option><option>Outros</option>
             </select>
         </div>
-		 <div class="field"><label>Corte</label>
-            <select id="corte">
-                <option>Normal</option><option>Itapajé</option><option>Regata</option><option>Machão</option><option>Longa</option><option>Super Cavada</option>
-            </select>
-        </div>
-		
-		
         <div class="field"><label>Designer</label>
             <select id="designer"><option>Pedro</option><option>Roger</option><option>Loja</option></select>
         </div>
@@ -143,8 +164,8 @@
         <div class="field"><label>Status</label><select id="status"><option>No Prazo</option><option>Entregue</option><option>Atrasado</option><option>Na Loja</option></select></div>
         <div class="field"><label>Costura</label><select id="costura"><option>Clóvis</option><option>Dona Ge</option><option>Gláucia</option></select></div>
         <div class="field"><label>Seção</label><select id="secao"><option>Estamparia</option><option>Balcão</option></select></div>
-        <div class="field"><label>Costura Gola</label><select id="costuraGola"><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
-        <div class="field"><label>Costura Manga</label><select id="costuraManga"><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
+        <div class="field"><label>Corte Gola</label><select id="corteGola"><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
+        <div class="field"><label>Corte Manga</label><select id="corteManga"><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
     </div>
 
     <div class="field"><label>Observação</label><textarea id="observacao" rows="2"></textarea></div>
@@ -163,7 +184,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyB-8mbOp5Bbh2fmp5GwXHH9xXM-DSq0TYnWX_np2yWHj74C0c0Hy5DGGneoqxUWQGncQ/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby7nYY74QNOUFFBkwOCMF67llYpSx5wwchEP7BPo7gud4eIAReAbQDmxHmNArc3W8rH7A/exec';
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -232,7 +253,6 @@
         });
     });
 
-    // NOVA FUNÇÃO: ENVIAR WHATSAPP
     function enviarWhatsApp() {
         const numPedido = document.getElementById('display-numero').innerText;
         const cliente = document.getElementById('cliente').value;
@@ -290,8 +310,8 @@
             status: document.getElementById('status').value,
             costura: document.getElementById('costura').value,
             secao: document.getElementById('secao').value,
-            costuraGola: document.getElementById('costuraGola').value,
-            costuraManga: document.getElementById('costuraManga').value,
+            corteGola: document.getElementById('corteGola').value,
+            corteManga: document.getElementById('corteManga').value,
             observacao: document.getElementById('observacao').value,
             assinatura: canvas.toDataURL()
         };
@@ -307,5 +327,3 @@
 </script>
 </body>
 </html>
-
-
