@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Pedidos</title>
+    <title>Sistema de Pedidos - Estamparia</title>
     <style>
         :root { 
             --primary: #2c3e50; 
@@ -62,12 +62,35 @@
         .btn-whatsapp { background: var(--whatsapp); color: white; }
         button:hover { opacity: 0.9; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+        /* AJUSTE EXCLUSIVO PARA IMPRESSÃO */
         @media print {
             .no-print, button, .limpar-btn { display: none !important; }
             body { padding: 0; background: white; }
-            .container { box-shadow: none; border: none; width: 100%; }
-            canvas#canvas-assinatura { border: 1px solid #000; height: 80px; }
-            input, select, textarea { border-right: 1px solid #ddd; border-radius: 4px; }
+            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
+            
+            /* Destaque nas bordas para impressão nítida */
+            input, select, textarea { 
+                border: 1.5px solid #000 !important; 
+                border-radius: 4px !important;
+                background: white !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+            }
+            .quadro { 
+                border: 1.5px solid #000 !important; 
+                background: white !important;
+            }
+            .quadro h4 {
+                border-bottom: 1.5px solid #000 !important;
+                color: black !important;
+            }
+            label { color: black !important; }
+            .total-box { 
+                border: 2px solid #000 !important; 
+                color: black !important; 
+                background: #eee !important;
+            }
+            canvas#canvas-assinatura { border: 1.5px solid #000 !important; height: 100px; }
         }
     </style>
 </head>
@@ -372,7 +395,7 @@
             // LIMPEZA DOS CAMPOS APÓS SALVAR
             document.querySelectorAll('input').forEach(i => i.value = ''); 
             document.querySelectorAll('textarea').forEach(t => t.value = ''); 
-            document.querySelectorAll('select').forEach(s => s.selectedIndex = 0); // Volta para "Selecione..."
+            document.querySelectorAll('select').forEach(s => s.selectedIndex = 0); 
             document.querySelectorAll('.qtd').forEach(q => q.value = ''); 
             
             document.getElementById('aReceber').value = 'R$ 0,00';
@@ -391,4 +414,3 @@
 </script>
 </body>
 </html>
-
