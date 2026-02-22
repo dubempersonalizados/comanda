@@ -5,112 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Pedidos - Estamparia</title>
     <style>
-        :root { 
-            --primary: #2c3e50; 
-            --accent: #27ae60; 
-            --light: #ecf0f1; 
-            --whatsapp: #25d366; 
-            --destaque-laranja: #ff8c00; 
-        }
-        
+        :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --whatsapp: #25d366; --destaque-laranja: #ff8c00; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1000px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); margin: auto; }
-        
         .header-logo { display: flex; justify-content: flex-start; margin-bottom: 20px; }
         .header-logo img { max-height: 80px; width: auto; }
-
         h2 { color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-top: 0; }
-        
-        /* Grid padrão para a maioria das linhas */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        
-        /* Grid específica para a primeira linha (Data + Cliente) */
-        .grid-header { 
-            display: grid; 
-            grid-template-columns: 180px 1fr; /* Data fixa e Cliente ocupa o resto */
-            gap: 15px; 
-            margin-bottom: 20px; 
-        }
-
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .grid-header { display: grid; grid-template-columns: 180px 1fr; gap: 15px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; }
         label { font-weight: 600; font-size: 13px; margin-bottom: 5px; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        input, select, textarea { 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-right: 5px solid #ccc; 
-            border-radius: 8px 15px 15px 8px; 
-            font-size: 14px; 
-            outline: none; 
-            transition: all 0.3s ease;
-            background: #fff;
-        }
-
-        input:focus, select:focus, textarea:focus { 
-            border-color: var(--destaque-laranja);
-            border-right-color: var(--destaque-laranja);
-            box-shadow: 0 0 8px rgba(255, 140, 0, 0.3);
-            background: #fffdfa;
-            transform: translateX(2px);
-        }
-        
-        .full-width { grid-column: 1 / -1; }
-
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-right: 5px solid #ccc; border-radius: 8px 15px 15px 8px; font-size: 14px; outline: none; transition: all 0.3s ease; background: #fff; }
+        input:focus, select:focus, textarea:focus { border-color: var(--destaque-laranja); border-right-color: var(--destaque-laranja); box-shadow: 0 0 8px rgba(255, 140, 0, 0.3); background: #fffdfa; transform: translateX(2px); }
         .quadros-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 25px 0; }
-        .quadro { 
-            border: 1px solid #eee; 
-            border-top: 4px solid var(--destaque-laranja); 
-            padding: 15px; 
-            border-radius: 12px; 
-            background: #fafafa; 
-            border-right: 4px solid #ddd; 
-        }
+        .quadro { border: 1px solid #eee; border-top: 4px solid var(--destaque-laranja); padding: 15px; border-radius: 12px; background: #fafafa; border-right: 4px solid #ddd; }
         .quadro h4 { margin: 0 0 10px 0; color: var(--primary); text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
         .medida-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .medida-linha input { width: 65px; text-align: center; padding: 6px; border-radius: 5px 10px 10px 5px; }
-
         .total-box { background: var(--primary); color: white; padding: 15px; border-radius: 12px; text-align: right; font-size: 20px; margin-bottom: 20px; border-right: 8px solid var(--destaque-laranja); }
-
         canvas#canvas-assinatura { border: 2px dashed #ccc; border-radius: 12px; background: #fff; cursor: crosshair; width: 100%; height: 100px; touch-action: none; }
-        
         .buttons { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s; text-transform: uppercase; }
+        button { flex: 1; min-width: 150px; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
         .btn-save { background: var(--accent); color: white; }
-        .btn-print { background: #34495e; color: white; }
         .btn-whatsapp { background: var(--whatsapp); color: white; }
-        button:hover { opacity: 0.9; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-
-        @media print {
-            .no-print, button, .limpar-btn { display: none !important; }
-            body { padding: 0; background: white; }
-            .container { box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; }
-            input, select, textarea { 
-                border: 1.5px solid #000 !important; 
-                border-radius: 4px !important;
-                background: white !important;
-                color: black !important;
-                -webkit-print-color-adjust: exact;
-            }
-            .quadro { border: 1.5px solid #000 !important; background: white !important; }
-            .quadro h4 { border-bottom: 1.5px solid #000 !important; color: black !important; }
-            label { color: black !important; }
-            .total-box { border: 2px solid #000 !important; color: black !important; background: #eee !important; }
-            canvas#canvas-assinatura { border: 1.5px solid #000 !important; height: 100px; }
-        }
-
-        /* Ajuste para telas pequenas (celular) na linha de cabeçalho */
-        @media (max-width: 600px) {
-            .grid-header { grid-template-columns: 1fr; }
-        }
+        .btn-print { background: #34495e; color: white; }
+        @media print { .no-print, button, .limpar-btn { display: none !important; } .container { box-shadow: none; border: none; width: 100%; padding: 0; } }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <div class="header-logo">
-        <img src="https://iili.io/qdBJFiF.jpg" alt="Logo Estamparia">
-    </div>
-
+    <div class="header-logo"><img src="https://iili.io/qdBJFiF.jpg" alt="Logo Estamparia"></div>
     <h2>Pedido Nº: <span id="display-numero">...</span></h2>
     
     <div class="grid-header">
@@ -118,101 +42,52 @@
         <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome completo do cliente"></div>
     </div>
 
-    <div class="grid">
-        <div class="field full-width"><label>Produto</label><input type="text" id="produto" placeholder="Descrição do produto/serviço"></div>
-    </div>
+    <div class="grid"><div class="field" style="grid-column: 1 / -1;"><label>Produto</label><input type="text" id="produto" placeholder="Descrição do produto"></div></div>
 
     <div class="grid">
         <div class="field"><label>Valor Total</label><input type="text" id="valor" class="mask-money" placeholder="R$ 0,00" oninput="calcAReceber()"></div>
         <div class="field"><label>Recebido</label><input type="text" id="recebido" class="mask-money" placeholder="R$ 0,00" oninput="calcAReceber()"></div>
         <div class="field"><label>À Receber</label><input type="text" id="aReceber" class="mask-money" value="R$ 0,00" readonly style="background: #f9f9f9;"></div>
-        <div class="field">
-            <label>Forma</label>
-            <select id="forma">
-                <option value="">Selecione...</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Cartão">Cartão</option>
-                <option value="Pix">Pix</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="field"><label>2ª Parcela</label><input type="text" id="segundaParcela" class="mask-money" placeholder="R$ 0,00" oninput="calcAReceber()"></div>
-        <div class="field">
-            <label>Forma 2</label>
-            <select id="forma2">
-                <option value="">Selecione...</option>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Cartão">Cartão</option>
-                <option value="Pix">Pix</option>
-            </select>
-        </div>
-        <div class="field"><label>Data 2ª Parcela</label><input type="text" id="data2Parcela" class="mask-date" placeholder="dd/mm/aaaa"></div>
+        <div class="field"><label>Forma</label><select id="forma"><option value="">Selecione...</option><option>Dinheiro</option><option>Cartão</option><option>Pix</option></select></div>
         <div class="field"><label>Prev. Entrega</label><input type="text" id="prevEntrega" class="mask-date" placeholder="dd/mm/aaaa"></div>
     </div>
 
-    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-        <div class="field"><label>Sublimação</label>
-            <select id="sublimacao">
-                <option value="">Selecione...</option>
-                <option>A3</option><option>Total</option><option>Parcial</option><option>Sem Estampa</option><option>DTF</option>
-            </select>
-        </div>
-        <div class="field"><label>Gola</label>
-            <select id="gola">
-                <option value="">Selecione...</option>
-                <option>V</option><option>Redonda</option><option>Polo</option><option>Itapagé</option><option>Farda</option><option>Alta</option><option>Outros</option><option>Casaco</option>
-            </select>
-        </div>
-        <div class="field"><label>Tecido</label>
-            <select id="tecido">
-                <option value="">Selecione...</option>
-                <option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca Colegial</option><option>Helanquinha Lite</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Aquarela</option><option>PP Cor</option><option>PP Elastano</option><option>Tactel Cor</option><option>Tactel Branco</option><option>Outros</option>
-            </select>
-        </div>
-        <div class="field"><label>Corte</label>
-            <select id="corte">
-                <option value="">Selecione...</option>
-                <option>Normal</option><option>Itapajé</option><option>Regata</option><option>Machão</option><option>Longa</option><option>Super Cavada</option>
-            </select>
-        </div>
-        <div class="field"><label>Designer</label>
-            <select id="designer">
-                <option value="">Selecione...</option>
-                <option>Pedro</option><option>Roger</option><option>Loja</option>
-            </select>
-        </div>
+    <div class="grid">
+        <div class="field"><label>Sublimação</label><select id="sublimacao"><option value="">Selecione...</option><option>A3</option><option>Total</option><option>Parcial</option><option>Sem Estampa</option><option>DTF</option></select></div>
+        <div class="field"><label>Gola</label><select id="gola"><option value="">Selecione...</option><option>V</option><option>Redonda</option><option>Polo</option><option>Itapagé</option><option>Farda</option><option>Alta</option><option>Casaco</option></select></div>
+        <div class="field"><label>Tecido</label><select id="tecido"><option value="">Selecione...</option><option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Cor</option><option>Tactel</option></select></div>
+        <div class="field"><label>Corte</label><select id="corte"><option value="">Selecione...</option><option>Normal</option><option>Regata</option><option>Itapajé</option><option>Machão</option><option>Longa</option><option>Super Cavada</option></select></div>
+        <div class="field"><label>Designer</label><select id="designer"><option value="">Selecione...</option><option>Pedro</option><option>Roger</option><option>Loja</option></select></div>
     </div>
 
     <div class="quadros-wrapper">
-        <div class="quadro" data-categoria="Básicas">
+        <div class="quadro">
             <h4>Básicas</h4>
-            <div class="medida-linha">PP <input type="number" class="qtd" data-tam="PP" min="0"></div>
-            <div class="medida-linha">P <input type="number" class="qtd" data-tam="P" min="0"></div>
-            <div class="medida-linha">M <input type="number" class="qtd" data-tam="M" min="0"></div>
-            <div class="medida-linha">G <input type="number" class="qtd" data-tam="G" min="0"></div>
-            <div class="medida-linha">GG <input type="number" class="qtd" data-tam="GG" min="0"></div>
-            <div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EGG" min="0"></div>
+            <div class="medida-linha">PP <input type="number" class="qtd" data-categoria="Básica" data-tamanho="PP"></div>
+            <div class="medida-linha">P <input type="number" class="qtd" data-categoria="Básica" data-tamanho="P"></div>
+            <div class="medida-linha">M <input type="number" class="qtd" data-categoria="Básica" data-tamanho="M"></div>
+            <div class="medida-linha">G <input type="number" class="qtd" data-categoria="Básica" data-tamanho="G"></div>
+            <div class="medida-linha">GG <input type="number" class="qtd" data-categoria="Básica" data-tamanho="GG"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd" data-categoria="Básica" data-tamanho="EGG"></div>
         </div>
-        <div class="quadro" data-categoria="Baby">
+        <div class="quadro">
             <h4>Baby</h4>
-            <div class="medida-linha">PP <input type="number" class="qtd" data-tam="PP" min="0"></div>
-            <div class="medida-linha">P <input type="number" class="qtd" data-tam="P" min="0"></div>
-            <div class="medida-linha">M <input type="number" class="qtd" data-tam="M" min="0"></div>
-            <div class="medida-linha">G <input type="number" class="qtd" data-tam="G" min="0"></div>
-            <div class="medida-linha">GG <input type="number" class="qtd" data-tam="GG" min="0"></div>
-            <div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EGG" min="0"></div>
+            <div class="medida-linha">PP <input type="number" class="qtd" data-categoria="Baby" data-tamanho="PP"></div>
+            <div class="medida-linha">P <input type="number" class="qtd" data-categoria="Baby" data-tamanho="P"></div>
+            <div class="medida-linha">M <input type="number" class="qtd" data-categoria="Baby" data-tamanho="M"></div>
+            <div class="medida-linha">G <input type="number" class="qtd" data-categoria="Baby" data-tamanho="G"></div>
+            <div class="medida-linha">GG <input type="number" class="qtd" data-categoria="Baby" data-tamanho="GG"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd" data-categoria="Baby" data-tamanho="EGG"></div>
         </div>
-        <div class="quadro" data-categoria="Infantil">
+        <div class="quadro">
             <h4>Infantil</h4>
-            <div class="medida-linha">01 <input type="number" class="qtd" data-tam="01" min="0"></div>
-            <div class="medida-linha">02 <input type="number" class="qtd" data-tam="02" min="0"></div>
-            <div class="medida-linha">04 <input type="number" class="qtd" data-tam="04" min="0"></div>
-            <div class="medida-linha">06 <input type="number" class="qtd" data-tam="06" min="0"></div>
-            <div class="medida-linha">08 <input type="number" class="qtd" data-tam="08" min="0"></div>
-            <div class="medida-linha">10 <input type="number" class="qtd" data-tam="10" min="0"></div>
-            <div class="medida-linha">12 <input type="number" class="qtd" data-tam="12" min="0"></div>
+            <div class="medida-linha">01 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="01"></div>
+            <div class="medida-linha">02 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="02"></div>
+            <div class="medida-linha">04 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="04"></div>
+            <div class="medida-linha">06 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="06"></div>
+            <div class="medida-linha">08 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="08"></div>
+            <div class="medida-linha">10 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="10"></div>
+            <div class="medida-linha">12 <input type="number" class="qtd" data-categoria="Infantil" data-tamanho="12"></div>
         </div>
     </div>
 
@@ -222,170 +97,104 @@
         <div class="field"><label>Status</label><select id="status"><option>No Prazo</option><option>Entregue</option><option>Atrasado</option><option>Na Loja</option></select></div>
         <div class="field"><label>Costura</label><select id="costura"><option value="">Selecione...</option><option>Clóvis</option><option>Dona Ge</option><option>Gláucia</option></select></div>
         <div class="field"><label>Seção</label><select id="secao"><option>Estamparia</option><option>Balcão</option></select></div>
-        <div class="field"><label>Corte Gola</label><select id="corteGola"><option value="">Selecione...</option><option>Ribana</option><option>Polo</option><option>Viés 3 cm</option><option>Viés 5 cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
-        <div class="field"><label>Corte Manga</label><select id="corteManga"><option value="">Selecione...</option><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Ribana</option><option>Viés</option></select></div>
+        <div class="field"><label>Corte Gola</label><select id="corteGolaPrint"><option value="">Selecione...</option><option>Ribana</option><option>Polo</option><option>Viés 3cm</option><option>Viés 5cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Alta</option><option>Outras</option></select></div>
+        <div class="field"><label>Corte Manga</label><select id="corteMangaPrint"><option value="">Selecione...</option><option>Normal</option><option>S. Punho</option><option>Punho</option><option>Viés</option><option>Ribana</option></select></div>
     </div>
 
-    <div class="field"><label>Observação</label><textarea id="observacao" rows="2" placeholder="Digite detalhes adicionais aqui..."></textarea></div>
+    <div class="field"><label>Observação</label><textarea id="observacao" rows="2"></textarea></div>
 
     <div class="field" style="margin-top:20px;">
-        <label>Assinatura do Cliente</label>
+        <label>Assinatura</label>
         <canvas id="canvas-assinatura"></canvas>
-        <button type="button" class="limpar-btn" onclick="limparAssinatura()" style="margin-top:8px; background:#eee; color:#666; padding:6px; font-size:11px; width:120px; border-radius:6px; border:1px solid #ddd;">Limpar Assinatura</button>
+        <button type="button" class="limpar-btn" onclick="limparAssinatura()" style="width:100px; margin-top:5px;">Limpar</button>
     </div>
 
     <div class="buttons no-print">
-        <button class="btn-save" onclick="salvarDados()" id="btn-save">Salvar na Planilha</button>
-        <button class="btn-whatsapp" onclick="enviarWhatsApp()">Enviar via WhatsApp</button>
-        <button class="btn-print" onclick="window.print()">Imprimir Pedido</button>
+        <button class="btn-save" onclick="salvarDados()" id="btn-save">Salvar Pedido</button>
+        <button class="btn-whatsapp" onclick="enviarWhatsApp()">WhatsApp</button>
+        <button class="btn-print" onclick="window.print()">Imprimir</button>
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby7nYY74QNOUFFBkwOCMF67llYpSx5wwchEP7BPo7gud4eIAReAbQDmxHmNArc3W8rH7A/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxgW_ckC4-QN9OJK_lngkiukZt3QlkQrzr1KDpCGu_I5cmZnYeQ2eJgdE6u4qBAkmLS/exec'; // <--- COLOQUE SEU LINK DA PLANILHA AQUI
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        canvas.width = canvas.offsetWidth * ratio;
-        canvas.height = canvas.offsetHeight * ratio;
-        ctx.scale(ratio, ratio);
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#000';
-    }
-    window.addEventListener('resize', resizeCanvas);
-    setTimeout(resizeCanvas, 100);
-
+    function resizeCanvas() { const ratio = Math.max(window.devicePixelRatio || 1, 1); canvas.width = canvas.offsetWidth * ratio; canvas.height = canvas.offsetHeight * ratio; ctx.scale(ratio, ratio); ctx.lineWidth = 2.5; ctx.lineCap = 'round'; }
+    window.addEventListener('resize', resizeCanvas); setTimeout(resizeCanvas, 100);
+    
     let drawing = false;
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: clientX - rect.left, y: clientY - rect.top };
-    }
-
+    function getPos(e) { const rect = canvas.getBoundingClientRect(); const clientX = e.touches ? e.touches[0].clientX : e.clientX; const clientY = e.touches ? e.touches[0].clientY : e.clientY; return { x: clientX - rect.left, y: clientY - rect.top }; }
     canvas.addEventListener('mousedown', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
     canvas.addEventListener('mousemove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
     window.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); });
-    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
-
+    canvas.addEventListener('touchstart', (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
     function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function calcAReceber() {
-        const parseMoney = (id) => {
-            let val = document.getElementById(id).value.replace(/\D/g, '');
-            return val ? parseFloat(val) / 100 : 0;
+        const parseMoney = (id) => { 
+            let val = document.getElementById(id).value.replace(/\D/g, ''); 
+            return val ? parseFloat(val) / 100 : 0; 
         };
-        const total = parseMoney('valor');
-        const recebido = parseMoney('recebido');
-        const parcela2 = parseMoney('segundaParcela');
-        const result = total - recebido - parcela2;
+        const result = parseMoney('valor') - parseMoney('recebido');
         document.getElementById('aReceber').value = result.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
-    document.querySelectorAll('.mask-money').forEach(el => {
-        el.addEventListener('input', e => {
-            let v = e.target.value.replace(/\D/g,'');
-            e.target.value = (v/100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        });
-    });
+    document.querySelectorAll('.mask-money').forEach(el => el.addEventListener('input', e => { 
+        let v = e.target.value.replace(/\D/g,''); 
+        e.target.value = (v/100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
+    }));
+    document.querySelectorAll('.mask-date').forEach(el => el.addEventListener('input', e => { let v = e.target.value.replace(/\D/g,'').slice(0, 8); if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3"); else if (v.length >= 3) v = v.replace(/(\d{2})(\d{0,2})/, "$1/$2"); e.target.value = v; }));
+    document.querySelectorAll('.qtd').forEach(input => input.addEventListener('input', () => { let soma = 0; document.querySelectorAll('.qtd').forEach(i => soma += (parseInt(i.value) || 0)); document.getElementById('total-geral').innerText = soma; }));
 
-    document.querySelectorAll('.mask-date').forEach(el => {
-        el.addEventListener('input', e => {
-            let v = e.target.value.replace(/\D/g,'').slice(0, 8);
-            if (v.length >= 5) v = v.replace(/(\d{2})(\d{2})(\d{0,4})/, "$1/$2/$3");
-            else if (v.length >= 3) v = v.replace(/(\d{2})(\d{0,2})/, "$1/$2");
-            e.target.value = v;
-        });
-    });
-
-    document.querySelectorAll('.qtd').forEach(input => {
-        input.addEventListener('input', () => {
-            let soma = 0;
-            document.querySelectorAll('.qtd').forEach(i => soma += (parseInt(i.value) || 0));
-            document.getElementById('total-geral').innerText = soma;
-        });
-    });
+    async function buscarNumeroPedido() {
+        try { const r = await fetch(scriptURL); const num = await r.text(); document.getElementById('display-numero').innerText = num; } catch (e) { document.getElementById('display-numero').innerText = "Erro"; }
+    }
+    window.onload = buscarNumeroPedido;
 
     function enviarWhatsApp() {
-        const numPedido = document.getElementById('display-numero').innerText;
+        const numeroPedido = document.getElementById('display-numero').innerText;
         const cliente = document.getElementById('cliente').value;
         const produto = document.getElementById('produto').value;
-        const totalQtd = document.getElementById('total-geral').innerText;
-        const vTotal = document.getElementById('valor').value;
-        const vRecebido = document.getElementById('recebido').value;
-        const vAReceber = document.getElementById('aReceber').value;
-        const dataEntrega = document.getElementById('prevEntrega').value;
-        const corteSelecionado = document.getElementById('corte').value;
+        const totalGeral = document.getElementById('total-geral').innerText;
+        const valorTotal = document.getElementById('valor').value;
+        const aReceber = document.getElementById('aReceber').value;
+        const prevEntrega = document.getElementById('prevEntrega').value;
 
-        if(!cliente) { alert("Por favor, preencha o nome do cliente."); return; }
-
-        let listaTamanhos = "";
-        const quadros = document.querySelectorAll('.quadro');
-        
-        quadros.forEach(quadro => {
-            const titulo = quadro.querySelector('h4').innerText;
-            const inputs = quadro.querySelectorAll('.qtd');
-            let itensNoQuadro = "";
-            
-            inputs.forEach(input => {
-                const qtd = parseInt(input.value);
-                if (qtd > 0) {
-                    const tam = input.getAttribute('data-tam');
-                    itensNoQuadro += `   - ${tam}: ${qtd} un.%0A`;
-                }
-            });
-
-            if (itensNoQuadro !== "") {
-                listaTamanhos += `*${titulo}:*%0A${itensNoQuadro}`;
+        let detalheTamanhos = "";
+        document.querySelectorAll('.qtd').forEach(input => {
+            const qtd = parseInt(input.value);
+            if (qtd > 0) {
+                const cat = input.getAttribute('data-categoria');
+                const tam = input.getAttribute('data-tamanho');
+                detalheTamanhos += `• ${cat} (${tam}): ${qtd} un%0A`;
             }
         });
 
-        const mensagem = `*RESUMO DO PEDIDO Nº ${numPedido}*%0A%0A` +
-            `*Cliente:* ${cliente}%0A` +
-            `*Produto:* ${produto}%0A` +
-            `*Corte:* ${corteSelecionado}%0A%0A` +
-            `*DETALHAMENTO DE TAMANHOS:*%0A${listaTamanhos}%0A` +
-            `*Quantidade Total:* ${totalQtd} unid.%0A%0A` +
-            `*Valor Total:* ${vTotal}%0A` +
-            `*Entrada:* ${vRecebido}%0A` +
-            `*À Receber:* ${vAReceber}%0A%0A` +
-            `*Previsão de Entrega:* ${dataEntrega}%0A%0A` +
-            `_Obrigado pela preferência!_`;
+        const msgTamanhos = detalheTamanhos ? `%0A*Grade de Tamanhos:*%0A${detalheTamanhos}` : "";
 
-        window.open(`https://api.whatsapp.com/send?text=${mensagem}`, '_blank');
+        const mensagem = `*Olá ${cliente}, tudo bem?*%0A%0AConfirmamos o seu pedido na *DUBEM*!%0A%0A*Pedido Nº:* ${numeroPedido}%0A*Produto:* ${produto}${msgTamanhos}%0A*Qtd Total:* ${totalGeral} un%0A*Valor Total:* ${valorTotal}%0A*Saldo à Receber:* ${aReceber}%0A*Previsão de Entrega:* ${prevEntrega}%0A%0A_Obrigado pela preferência!_`;
+        
+        window.open(`https://wa.me/?text=${mensagem}`, '_blank');
     }
-
-    async function buscarNumeroPedido() {
-        try {
-            const response = await fetch(scriptURL);
-            const num = await response.text();
-            document.getElementById('display-numero').innerText = num;
-        } catch (e) { document.getElementById('display-numero').innerText = "Erro"; }
-    }
-
-    window.onload = buscarNumeroPedido;
 
     async function salvarDados() {
-        const btn = document.getElementById('btn-save');
-        btn.disabled = true; btn.innerText = "Enviando...";
-        
+        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "Enviando...";
         const dados = {
             numero: document.getElementById('display-numero').innerText,
             data: document.getElementById('data').value,
             cliente: document.getElementById('cliente').value,
             quantidadeTotal: document.getElementById('total-geral').innerText,
             valor: document.getElementById('valor').value,
-            forma: document.getElementById('forma').value,
             recebido: document.getElementById('recebido').value,
             aReceber: document.getElementById('aReceber').value,
-            segundaParcela: document.getElementById('segundaParcela').value,
-            forma2: document.getElementById('forma2').value,
-            data2Parcela: document.getElementById('data2Parcela').value,
+            // Campos excluídos enviados como vazio para manter a estrutura das colunas na planilha
+            segundaParcela: "", 
+            data2Parcela: "",
+            forma2: "",
+            // Fim dos campos vazios
             produto: document.getElementById('produto').value,
             sublimacao: document.getElementById('sublimacao').value,
             gola: document.getElementById('gola').value,
@@ -395,33 +204,14 @@
             status: document.getElementById('status').value,
             costura: document.getElementById('costura').value,
             secao: document.getElementById('secao').value,
-            corteGola: document.getElementById('corteGola').value,
-            corteManga: document.getElementById('corteManga').value,
+            forma: document.getElementById('forma').value,
             observacao: document.getElementById('observacao').value,
             assinatura: canvas.toDataURL()
         };
-
         try {
             await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
-            alert('Sucesso! Pedido salvo com sucesso.');
-            
-            document.querySelectorAll('input').forEach(i => i.value = ''); 
-            document.querySelectorAll('textarea').forEach(t => t.value = ''); 
-            document.querySelectorAll('select').forEach(s => s.selectedIndex = 0); 
-            document.querySelectorAll('.qtd').forEach(q => q.value = ''); 
-            
-            document.getElementById('aReceber').value = 'R$ 0,00';
-            document.getElementById('total-geral').innerText = '0';
-            limparAssinatura();
-            
-            buscarNumeroPedido();
-            
-            btn.disabled = false; 
-            btn.innerText = "Salvar na Planilha";
-        } catch (e) {
-            alert('Erro ao salvar. Verifique sua conexão.');
-            btn.disabled = false; btn.innerText = "Salvar na Planilha";
-        }
+            alert('Pedido salvo com sucesso!'); location.reload();
+        } catch (e) { alert('Erro ao salvar.'); btn.disabled = false; btn.innerText = "Salvar na Planilha"; }
     }
 </script>
 </body>
