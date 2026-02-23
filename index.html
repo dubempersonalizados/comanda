@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Pedidos - DUBEM</title>
+    <title>Sistema de Pedidos - Estamparia</title>
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --light: #ecf0f1; --whatsapp: #25d366; --destaque-laranja: #ff8c00; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
@@ -35,7 +35,7 @@
 <body>
 <div class="container">
     <div class="header-logo"><img src="https://iili.io/qdBJFiF.jpg" alt="Logo Estamparia"></div>
-    <h2>Pedido Nº: <span id="display-numero">...</span></h2>
+    <h2>Pedido Nº: <span id="display-numero">Buscando...</span></h2>
     
     <div class="grid-header">
         <div class="field"><label>Data</label><input type="text" id="data" class="mask-date" placeholder="dd/mm/aaaa"></div>
@@ -55,7 +55,7 @@
     <div class="grid">
         <div class="field"><label>Sublimação</label><select id="sublimacao"><option value="">Selecione...</option><option>A3</option><option>Total</option><option>Parcial</option><option>Sem Estampa</option><option>DTF</option></select></div>
         <div class="field"><label>Gola</label><select id="gola"><option value="">Selecione...</option><option>V</option><option>Redonda</option><option>Polo</option><option>Itapagé</option><option>Farda</option><option>Alta</option><option>Casaco</option></select></div>
-        <div class="field"><label>Tecido</label><select id="tecido"><option value="">Selecione...</option><option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca</option><option>Moletom</option><option>Piquê</option><option>PP Caiman</option><option>PP Cor</option><option>PP Elastano</option><option>Tactel Cor</option><option>Tactel Branco</option></select></div>
+        <div class="field"><label>Tecido</label><select id="tecido"><option value="">Selecione...</option><option>Algodão</option><option>Cacharrel Kanxa</option><option>Cotton</option><option>Dry Elastano</option><option>Dry Falcom</option><option>Dry Kanxa</option><option>Dry Sport</option><option>Helanca</option><option>Helanca Colegial</option><option>Helanquinha Lite</option><option>Moletom</option><option>Piquê</option><option>PP Elastano</option><option>PP Cor</option><option>PP Aquarela</option><option>Tactel</option><option>Tactel Cor</option></select></div>
         <div class="field"><label>Corte</label><select id="corte"><option value="">Selecione...</option><option>Normal</option><option>Regata</option><option>Itapajé</option><option>Machão</option><option>Longa</option><option>Super Cavada</option></select></div>
         <div class="field"><label>Designer</label><select id="designer"><option value="">Selecione...</option><option>Pedro</option><option>Roger</option><option>Loja</option></select></div>
     </div>
@@ -110,14 +110,24 @@
     </div>
 
     <div class="buttons no-print">
-        <button class="btn-save" onclick="salvarDados()" id="btn-save">Salvar Pedido</button>
+        <button class="btn-save" onclick="salvarDados()" id="btn-save">Salvar na Planilha</button>
         <button class="btn-whatsapp" onclick="enviarWhatsApp()">WhatsApp</button>
-        <button class="btn-print" onclick="window.print()">Imprimir</button>
+        <button class="btn-print" onclick="prepararImpressao()">Imprimir PDF</button>
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxgW_ckC4-QN9OJK_lngkiukZt3QlkQrzr1KDpCGu_I5cmZnYeQ2eJgdE6u4qBAkmLS/exec'; // <--- COLOQUE SEU LINK DA PLANILHA AQUI
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxgW_ckC4-QN9OJK_lngkiukZt3QlkQrzr1KDpCGu_I5cmZnYeQ2eJgdE6u4qBAkmLS/exec'; 
+
+    // Função para definir a data de hoje automaticamente
+    function setHoje() {
+        const hoje = new Date();
+        const dd = String(hoje.getDate()).padStart(2, '0');
+        const mm = String(hoje.getMonth() + 1).padStart(2, '0');
+        const yyyy = hoje.getFullYear();
+        document.getElementById('data').value = dd + '/' + mm + '/' + yyyy;
+    }
+    window.onload = setHoje;
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -134,10 +144,7 @@
     function limparAssinatura() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
     function calcAReceber() {
-        const parseMoney = (id) => { 
-            let val = document.getElementById(id).value.replace(/\D/g, ''); 
-            return val ? parseFloat(val) / 100 : 0; 
-        };
+        const parseMoney = (id) => { let val = document.getElementById(id).value.replace(/\D/g, ''); return val ? parseFloat(val) / 100 : 0; };
         const result = parseMoney('valor') - parseMoney('recebido');
         document.getElementById('aReceber').value = result.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
@@ -150,9 +157,24 @@
     document.querySelectorAll('.qtd').forEach(input => input.addEventListener('input', () => { let soma = 0; document.querySelectorAll('.qtd').forEach(i => soma += (parseInt(i.value) || 0)); document.getElementById('total-geral').innerText = soma; }));
 
     async function buscarNumeroPedido() {
-        try { const r = await fetch(scriptURL); const num = await r.text(); document.getElementById('display-numero').innerText = num; } catch (e) { document.getElementById('display-numero').innerText = "Erro"; }
+        if (!scriptURL || scriptURL.includes('COLE_AQUI')) return;
+        try {
+            const response = await fetch(scriptURL + '?t=' + new Date().getTime());
+            const num = await response.text();
+            document.getElementById('display-numero').innerText = num || "1";
+        } catch (e) { document.getElementById('display-numero').innerText = "Erro"; }
     }
-    window.onload = buscarNumeroPedido;
+    setTimeout(buscarNumeroPedido, 300);
+
+    function prepararImpressao() {
+        const cliente = document.getElementById('cliente').value || "Cliente_Nao_Informado";
+        const designer = document.getElementById('designer').value || "Sem_Designer";
+        const numPedido = document.getElementById('display-numero').innerText;
+        const tituloOriginal = document.title;
+        document.title = `Pedido_${numPedido}_${cliente}_Designer_${designer}`;
+        window.print();
+        setTimeout(() => { document.title = tituloOriginal; }, 1000);
+    }
 
     function enviarWhatsApp() {
         const numeroPedido = document.getElementById('display-numero').innerText;
@@ -162,7 +184,6 @@
         const valorTotal = document.getElementById('valor').value;
         const aReceber = document.getElementById('aReceber').value;
         const prevEntrega = document.getElementById('prevEntrega').value;
-
         let detalheTamanhos = "";
         document.querySelectorAll('.qtd').forEach(input => {
             const qtd = parseInt(input.value);
@@ -172,16 +193,15 @@
                 detalheTamanhos += `• ${cat} (${tam}): ${qtd} un%0A`;
             }
         });
-
         const msgTamanhos = detalheTamanhos ? `%0A*Grade de Tamanhos:*%0A${detalheTamanhos}` : "";
-
-        const mensagem = `*Olá ${cliente}, tudo bem?*%0A%0AConfirmamos o seu pedido na *DUBEM*!%0A%0A*Pedido Nº:* ${numeroPedido}%0A*Produto:* ${produto}${msgTamanhos}%0A*Qtd Total:* ${totalGeral} un%0A*Valor Total:* ${valorTotal}%0A*Saldo à Receber:* ${aReceber}%0A*Previsão de Entrega:* ${prevEntrega}%0A%0A_Obrigado pela preferência!_`;
-        
+        const mensagem = `*Olá ${cliente}, tudo bem?*%0A%0AConfirmamos o seu pedido na *Estamparia*!%0A%0A*Pedido Nº:* ${numeroPedido}%0A*Produto:* ${produto}${msgTamanhos}%0A*Qtd Total:* ${totalGeral} un%0A*Valor Total:* ${valorTotal}%0A*Saldo à Receber:* ${aReceber}%0A*Previsão de Entrega:* ${prevEntrega}%0A%0A_Obrigado pela preferência!_`;
         window.open(`https://wa.me/?text=${mensagem}`, '_blank');
     }
 
     async function salvarDados() {
-        const btn = document.getElementById('btn-save'); btn.disabled = true; btn.innerText = "Enviando...";
+        const btn = document.getElementById('btn-save');
+        btn.disabled = true; btn.innerText = "Enviando...";
+
         const dados = {
             numero: document.getElementById('display-numero').innerText,
             data: document.getElementById('data').value,
@@ -190,11 +210,6 @@
             valor: document.getElementById('valor').value,
             recebido: document.getElementById('recebido').value,
             aReceber: document.getElementById('aReceber').value,
-            // Campos excluídos enviados como vazio para manter a estrutura das colunas na planilha
-            segundaParcela: "", 
-            data2Parcela: "",
-            forma2: "",
-            // Fim dos campos vazios
             produto: document.getElementById('produto').value,
             sublimacao: document.getElementById('sublimacao').value,
             gola: document.getElementById('gola').value,
@@ -208,10 +223,28 @@
             observacao: document.getElementById('observacao').value,
             assinatura: canvas.toDataURL()
         };
+
         try {
             await fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(dados) });
-            alert('Pedido salvo com sucesso!'); location.reload();
-        } catch (e) { alert('Erro ao salvar.'); btn.disabled = false; btn.innerText = "Salvar na Planilha"; }
+            alert('Pedido salvo com sucesso!');
+
+            // LIMPEZA (Data não está mais nesta lista para ficar fixa)
+            const camposLimpar = [
+                'cliente', 'produto', 'valor', 'recebido', 
+                'aReceber', 'forma', 'prevEntrega', 'sublimacao', 
+                'gola', 'tecido', 'corte', 'designer', 'costura', 
+                'observacao', 'corteGolaPrint', 'corteMangaPrint'
+            ];
+            camposLimpar.forEach(id => { if(document.getElementById(id)) document.getElementById(id).value = ''; });
+            
+            document.querySelectorAll('.qtd').forEach(input => input.value = '');
+            document.getElementById('total-geral').innerText = '0';
+            limparAssinatura();
+
+            document.getElementById('display-numero').innerText = "Buscando...";
+            await buscarNumeroPedido();
+
+        } catch (e) { alert('Erro ao salvar.'); } finally { btn.disabled = false; btn.innerText = "Salvar na Planilha"; }
     }
 </script>
 </body>
