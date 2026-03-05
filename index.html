@@ -14,17 +14,35 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .field { display: flex; flex-direction: column; }
         label { font-weight: bold; font-size: 10px; margin-bottom: 4px; color: #555; text-transform: uppercase; }
-        input, select, textarea { padding: 8px; border: 1px solid #ddd; border-right: 4px solid #ccc; border-radius: 5px; outline: none; font-size: 13px; background: #fff; }
+        
+        input, select, textarea { 
+            padding: 8px; 
+            border: 1px solid #000000; 
+            border-radius: 5px; 
+            outline: none; 
+            font-size: 13px; 
+            background: #fff; 
+        }
 
         .quadros-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0; }
-        .quadro { border: 1px solid #eee; border-top: 4px solid var(--destaque); padding: 12px; border-radius: 8px; background: #fafafa; }
+        .quadro { border: 1px solid #000; border-top: 4px solid var(--destaque); padding: 12px; border-radius: 8px; background: #fafafa; }
         .quadro h4 { margin: 0 0 10px 0; text-align: center; color: var(--primary); }
         .medida-linha { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .medida-linha input { width: 50px; text-align: center; padding: 4px; border-right: none; }
+        .medida-linha input { width: 50px; text-align: center; padding: 4px; border: 1px solid #000; }
 
-        .total-box { background: var(--primary); color: white; padding: 12px; border-radius: 8px; text-align: right; font-size: 16px; margin-bottom: 15px; border-right: 6px solid var(--destaque); }
+        .total-box { 
+            background: var(--primary); 
+            color: white; 
+            padding: 12px; 
+            border-radius: 8px; 
+            text-align: left; 
+            font-weight: bold; 
+            font-size: 16px; 
+            margin-bottom: 15px; 
+            border-left: 6px solid var(--destaque); 
+        }
         
-        .signature-box { border: 2px dashed #bdc3c7; background: #ffffff !important; border-radius: 10px; touch-action: none; margin-top: 5px; position: relative; }
+        .signature-box { border: 2px dashed #000; background: #ffffff !important; border-radius: 10px; touch-action: none; margin-top: 5px; position: relative; }
         #canvas-assinatura { width: 100%; height: 160px; display: block; cursor: crosshair; }
         #assinatura-imagem { display: none; width: 100%; height: 160px; object-fit: contain; }
 
@@ -39,7 +57,7 @@
             .container { box-shadow: none; width: 100%; padding: 0; border-radius: 0; }
             #canvas-assinatura { display: none !important; }
             #assinatura-imagem { display: block !important; }
-            .signature-box { border: 1px solid #eee; }
+            .signature-box { border: 1px solid #000; }
         }
     </style>
 </head>
@@ -52,26 +70,26 @@
 
     <div class="grid">
         <div class="field"><label>Data Pedido</label><input type="text" id="data" readonly></div>
-		<div class="field"><label>Atendente</label><select id="atendente"><option value="">Selecione...</option><option>Fernanda</option><option>Cláudia</option><option>Mayara</option><option>Pedro</option><option>John</option><option>Roger</option></select></div>
-        <div class="field"><label>Cliente</label><input type="text" id="cliente"></div>
+		<div class="field"><label>Atendente</label><select id="atendente"><option value="">Selecione...</option><option>Fernanda</option><option>Mayara</option><option>Cláudia</option><option>John</option><option>Pedro</option><option>Roger</option></select></div>
+        <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome completo do cliente"></div>
         <div class="field"><label>Contato (WhatsApp)</label><input type="text" id="contato" placeholder="5511999999999"></div>
     </div>
 
     <div class="grid">
-        <div class="field"><label>Produto</label><input type="text" id="produto"></div>
-        <div class="field"><label>Data Produção (+5d)</label><input type="text" id="dataProducao" readonly></div>
-        <div class="field"><label>Prev. Entrega (+15d)</label><input type="text" id="prevEntrega"></div>
+        <div class="field"><label>Produto</label><input type="text" id="produto" placeholder="Descrição detalhada do produto"></div>
+        <div class="field"><label>Data Produção (+5d úteis)</label><input type="text" id="dataProducao" readonly></div>
+        <div class="field"><label>Prev. Entrega (+15d úteis)</label><input type="text" id="prevEntrega"></div>
     </div>
 
     <div class="grid">
-        <div class="field"><label>Sublimação</label><select id="sublimacao"><option value="">Selecione...</option><option>A3</option><option>Total</option><option>Parcial</option><option>DTF</option><option>Sem Estampa</option></select></div>
-        <div class="field"><label>Gola</label><select id="gola"><option value="">Selecione...</option><option>Redonda</option><option>V</option><option>Polo</option><option>Itapajé</option><option>Alta</option></select></div>
-        <div class="field"><label>Tecido</label><select id="tecido"><option value="">Selecione...</option><option>Algodão</option><option>Dry Falcom</option><option>Dry Sport</option><option>Dry Elastano</option><option>Helanca</option><option>Helquinha Lite</option><option>Helanca Colegial</option><option>PP Aquarela</option><option>PP Cor</option><option>PP Elastano</option><option>Piquê</option><option>Piquê Cor</option><option>Tactel Branco</option><option>Tactel Cor</option></select></div>
+        <div class="field"><label>Sublimação</label><select id="sublimacao"><option value="">Selecione...</option><option>A3</option><option>Total</option><option>Parcial</option><option>Sem Estampa</option><option>DTF</option></select></div>
+        <div class="field"><label>Gola</label><select id="gola"><option value="">Selecione...</option><option>V</option><option>Redonda</option><option>Polo</option><option>Itapagé</option><option>Farda</option><option>Casaco</option><option>Alta</option></select></div>
+        <div class="field"><label>Tecido</label><select id="tecido"><option value="">Selecione...</option><option>Algodão</option><option>Dry Falcom</option><option>Dry Elastano</option><option>Dry Sport</option><option>PP</option><option>PP Cor</option><option>PP Elastano</option><option>Piquê</option><option>Helanca</option><option>Helanquinha Lite</option><option>Helanca Colegial</option><option>Moletom</option><option>Tactel</option></select></div>
         <div class="field"><label>Corte</label><select id="corte"><option value="">Selecione...</option><option>Normal</option><option>Regata</option><option>Machão</option><option>Itapajé</option><option>Longa</option><option>Super Cavada</option></select></div>
-        <div class="field"><label>Designer</label><select id="designer"><option value="">Selecione...</option><option>Pedro</option><option>Roger</option><option>Loja</option></select></div>
+        <div class="field"><label>Designer</label><select id="designer"><option value="">Selecione...</option><option>Pedro</option><option>Roger</option><option>Loja</option></select></div>	
     </div>
 
-    <div class="grid no-print" style="background: #fdfdfd; padding: 12px; border-radius: 8px; border: 1px solid #eee;">
+    <div class="grid no-print" style="background: #fdfdfd; padding: 12px; border-radius: 8px; border: 1px solid #000;">
         <div class="field"><label>Valor Total</label><input type="text" id="valor" oninput="mascaraMoeda(this); calcFin()"></div>
         <div class="field"><label>Valor Recebido</label><input type="text" id="recebido" oninput="mascaraMoeda(this); calcFin()"></div>
         <div class="field"><label>À Receber</label><input type="text" id="aReceber" readonly style="background:#f0f0f0"></div>
@@ -81,12 +99,12 @@
     <div class="quadros-wrapper">
         <div class="quadro" data-categoria="Básicas">
             <h4>Básicas</h4>
-            <div class="medida-linha">PP <input type="number" class="qtd" data-tam="PP"></div>
+           <div class="medida-linha">PP <input type="number" class="qtd" data-tam="PP"></div>
             <div class="medida-linha">P <input type="number" class="qtd" data-tam="P"></div>
             <div class="medida-linha">M <input type="number" class="qtd" data-tam="M"></div>
             <div class="medida-linha">G <input type="number" class="qtd" data-tam="G"></div>
             <div class="medida-linha">GG <input type="number" class="qtd" data-tam="GG"></div>
-            <div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EXG"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EGG"></div>
         </div>
         <div class="quadro" data-categoria="Baby Look">
             <h4>Baby Look</h4>
@@ -95,16 +113,16 @@
             <div class="medida-linha">M <input type="number" class="qtd" data-tam="M"></div>
             <div class="medida-linha">G <input type="number" class="qtd" data-tam="G"></div>
             <div class="medida-linha">GG <input type="number" class="qtd" data-tam="GG"></div>
-			<div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EXG"></div>
+            <div class="medida-linha">EGG <input type="number" class="qtd" data-tam="EGG"></div>
         </div>
         <div class="quadro" data-categoria="Infantil">
             <h4>Infantil</h4>
-           <div class="medida-linha">01 <input type="number" class="qtd" data-tam="02"></div>
+            <div class="medida-linha">01 <input type="number" class="qtd" data-tam="01"></div>
             <div class="medida-linha">02 <input type="number" class="qtd" data-tam="02"></div>
-			<div class="medida-linha">04 <input type="number" class="qtd" data-tam="02"></div>
-            <div class="medida-linha">06 <input type="number" class="qtd" data-tam="04"></div>
+            <div class="medida-linha">04 <input type="number" class="qtd" data-tam="04"></div>
+            <div class="medida-linha">06 <input type="number" class="qtd" data-tam="06"></div>
             <div class="medida-linha">08 <input type="number" class="qtd" data-tam="08"></div>
-			<div class="medida-linha">10 <input type="number" class="qtd" data-tam="02"></div>
+            <div class="medida-linha">10 <input type="number" class="qtd" data-tam="10"></div>
             <div class="medida-linha">12 <input type="number" class="qtd" data-tam="12"></div>
         </div>
     </div>
@@ -113,9 +131,9 @@
 
     <div class="grid">
         <div class="field"><label>Status</label><select id="status"><option>No Prazo</option></select></div>
-        <div class="field"><label>Costura</label><select id="costura"><option value="">Selecione...</option><option>Clóvis</option><option>Gláucia</option><option>Dona Gê</option></select></div>
+        <div class="field"><label>Costura</label><select id="costura"><option value="">Selecione...</option><option>Clóvis</option><option>Gláucia</option></select></div>
         <div class="field"><label>Seção</label><select id="secao"><option>Estamparia</option></select></div>
-        <div class="field"><label>Corte Gola</label><select id="corteGolaPrint"><option value="">Selecione...</option><option>Ribana</option><option>Polo</option><option>Viés 3cm</option><option>Viés 5cm</option><option>Itapajé 3</option><option>Itapajé 2</option><option>Outras</option><option>Alta</option></select></div>
+        <div class="field"><label>Corte Gola</label><select id="corteGolaPrint"><option value="">Selecione...</option><option>Ribana</option><option>Polo</option><option>Viés 3cm</option><option>Viés 5cm</option><option>Itapajé 2</option><option>Itapajé 3</option><option>Outras</option><option>Alta</option></select></div>
         <div class="field"><label>Corte Manga</label><select id="corteMangaPrint"><option value="">Selecione...</option><option>Normal</option><option>Punho</option><option>S. Punho</option><option>Ribana</option><option>Viés</option></select></div>
     </div>
 
@@ -139,7 +157,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyOdlrcZ1yb82fKJCrIkne6X0AAY0coa1Iv-7TEhkECjd7D9YcCvB6G8dNfXHs925KE/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby-ya27mA4OzYl00sdigPtpiCHQ_BIVfAzNYBGJ1oUqjglkjcdlFN5P-itKALCPGCsd/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -197,8 +215,10 @@
         i.value = "R$ " + v;
     }
     function calcFin() {
-        const t = parseFloat(document.getElementById('valor').value.replace("R$ ","").replace(".","").replace(",",".")) || 0;
-        const r = parseFloat(document.getElementById('recebido').value.replace("R$ ","").replace(".","").replace(",",".")) || 0;
+        const valRaw = document.getElementById('valor').value.replace("R$ ","").replace(/\./g,"").replace(",",".");
+        const recRaw = document.getElementById('recebido').value.replace("R$ ","").replace(/\./g,"").replace(",",".");
+        const t = parseFloat(valRaw) || 0;
+        const r = parseFloat(recRaw) || 0;
         document.getElementById('aReceber').value = "R$ " + (t - r).toLocaleString('pt-BR', {minimumFractionDigits: 2});
     }
 
@@ -219,7 +239,6 @@
         setTimeout(() => { document.title = originalTitle; }, 1000);
     }
 
-    // --- MENSAGEM WHATSAPP COMPLETA RESTAURADA ---
     function enviarWhatsApp() {
         const num = document.getElementById('display-numero').innerText;
         const cli = document.getElementById('cliente').value;
@@ -263,7 +282,6 @@ Segue dados do seu pedido:
         window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
     }
 
-    // --- SALVAR E LIMPAR TUDO ---
     async function salvarDados() {
         const btn = document.getElementById('btn-save'); 
         btn.disabled = true; btn.innerText = "Salvando...";
@@ -277,7 +295,7 @@ Segue dados do seu pedido:
             numero: document.getElementById('display-numero').innerText,
             data: document.getElementById('data').value,
             cliente: document.getElementById('cliente').value,
-            contato: document.getElementById('contato').value,
+            contato: document.getElementById('contato').value, // INFO ENVIADA PARA O DRIVE
             dataProducao: document.getElementById('dataProducao').value,
             prevEntrega: document.getElementById('prevEntrega').value,
             produto: document.getElementById('produto').value,
@@ -303,15 +321,10 @@ Segue dados do seu pedido:
         try {
             const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(dados) });
             alert('✅ Pedido Salvo com Sucesso!');
-            
-            // LIMPEZA TOTAL E RECARGA
             document.getElementById('formPedido').reset();
             limparAssinatura();
             document.getElementById('total-geral').innerText = "0";
-            
-            // Recarrega para pegar novo número e resetar datas
             location.reload(); 
-
         } catch(e) { 
             alert('Erro ao salvar'); 
             btn.disabled = false; 
@@ -319,11 +332,25 @@ Segue dados do seu pedido:
         }
     }
 
+    function adicionarDiasUteis(data, dias) {
+        let dataFinal = new Date(data);
+        let diasContados = 0;
+        while (diasContados < dias) {
+            dataFinal.setDate(dataFinal.getDate() + 1);
+            let diaSemana = dataFinal.getDay();
+            if (diaSemana !== 0 && diaSemana !== 6) {
+                diasContados++;
+            }
+        }
+        return dataFinal;
+    }
+
     function inicializarDatas() {
-        const h = new Date(); const f = (d) => d.toLocaleDateString('pt-BR');
-        document.getElementById('data').value = f(h);
-        let p = new Date(); p.setDate(h.getDate() + 5); document.getElementById('dataProducao').value = f(p);
-        let e = new Date(); e.setDate(h.getDate() + 21); document.getElementById('prevEntrega').value = f(e);
+        const hoje = new Date();
+        const formatar = (d) => d.toLocaleDateString('pt-BR');
+        document.getElementById('data').value = formatar(hoje);
+        document.getElementById('dataProducao').value = formatar(adicionarDiasUteis(hoje, 5));
+        document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, 15));
         fetch(scriptURL).then(r => r.text()).then(t => document.getElementById('display-numero').innerText = t);
     }
 
@@ -335,5 +362,3 @@ Segue dados do seu pedido:
 </script>
 </body>
 </html>
-
-
