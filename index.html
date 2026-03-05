@@ -323,7 +323,7 @@ Segue dados do seu pedido:
         const h = new Date(); const f = (d) => d.toLocaleDateString('pt-BR');
         document.getElementById('data').value = f(h);
         let p = new Date(); p.setDate(h.getDate() + 5); document.getElementById('dataProducao').value = f(p);
-        let e = new Date(); e.setDate(h.getDate() + 15); document.getElementById('prevEntrega').value = f(e);
+        let e = new Date(); e.setDate(h.getDate() + 21); document.getElementById('prevEntrega').value = f(e);
         fetch(scriptURL).then(r => r.text()).then(t => document.getElementById('display-numero').innerText = t);
     }
 
@@ -335,4 +335,5 @@ Segue dados do seu pedido:
 </script>
 </body>
 </html>
+
 
