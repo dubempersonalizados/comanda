@@ -157,7 +157,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycby-ya27mA4OzYl00sdigPtpiCHQ_BIVfAzNYBGJ1oUqjglkjcdlFN5P-itKALCPGCsd/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzE4k0M-TNGsUpk7SulkTZAlyVRtZ1fo5yVu4ohgrxeeK6eR_8HV8StNS0FumwPFHm9/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -242,6 +242,7 @@
     function enviarWhatsApp() {
         const num = document.getElementById('display-numero').innerText;
         const cli = document.getElementById('cliente').value;
+		const prod = document.getElementById('produto').value;
         const dat = document.getElementById('data').value;
         const ent = document.getElementById('prevEntrega').value;
         const tot = document.getElementById('total-geral').innerText;
@@ -267,6 +268,7 @@
 Segue dados do seu pedido:
 *Nº do Pedido:* ${num}
 *Cliente:* ${cli}
+*Produto:* ${prod}
 *Data do Pedido:* ${dat}
 *Prev. de Entrega:* ${ent}
 
