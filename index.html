@@ -157,7 +157,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzE4k0M-TNGsUpk7SulkTZAlyVRtZ1fo5yVu4ohgrxeeK6eR_8HV8StNS0FumwPFHm9/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwta7K3wx2nA4_SxN0Q2BKULH0S8QO8PDLDeDWbdi6Rm5D-GwNy_ol6cveWKAPqzU5BXw/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -317,7 +317,12 @@ Segue dados do seu pedido:
             corteManga: document.getElementById('corteMangaPrint').value,
             observacao: document.getElementById('observacao').value,
             quantidadeTotal: document.getElementById('total-geral').innerText,
-            detalhesTamanhos: gradeArr
+            detalhesTamanhos: gradeArr,
+            atendente: document.getElementById('atendente').value,
+            assinatura: (function() {
+                const c = document.getElementById('canvas-assinatura');
+                try { return c && c.width > 0 ? c.toDataURL('image/png') : ''; } catch(e) { return ''; }
+            })()
         };
 
         try {
