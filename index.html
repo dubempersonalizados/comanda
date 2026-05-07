@@ -157,7 +157,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyhOfBGZffH9et6BWOtQ-j-sTxiWDi6bCtTEJd6cez02lGvMg0mi6oozOrUZQZThAskbA/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyEApXI6021RARCH9Hd9mdpty3NPkd6SwJoxTsPIDV__GBoouyfBlf8VjFyrEAHyn7pUQ/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -229,7 +229,8 @@
 
     function gerarPDF() {
         const imgAssinatura = document.getElementById('assinatura-imagem');
-        if (jaAssinou) { imgAssinatura.src = canvas.toDataURL("image/png"); }
+        if (jaAssinou) { try { imgAssinatura.src = canvas.toDataURL("image/png"); } catch(e) { imgAssinatura.src = ""; } }
+        else { imgAssinatura.src = ""; }
         const num = document.getElementById('display-numero').innerText;
         const cli = document.getElementById('cliente').value || "Cli";
         const des = document.getElementById('designer').value || "Des";
@@ -287,6 +288,15 @@ Segue dados do seu pedido:
     }
 
     async function salvarDados() {
+        // Validação dos campos obrigatórios
+        const cliente = document.getElementById('cliente').value.trim();
+        const produto = document.getElementById('produto').value.trim();
+        const atendente = document.getElementById('atendente').value;
+        if (!cliente || !produto || !atendente) {
+            alert('⚠️ Preencha ao menos Cliente, Produto e Atendente antes de salvar.');
+            return;
+        }
+
         const btn = document.getElementById('btn-save'); 
         btn.disabled = true; btn.innerText = "Salvando...";
         
@@ -296,7 +306,7 @@ Segue dados do seu pedido:
         });
 
         const dados = {
-            numero: document.getElementById('display-numero').innerText,
+            numero: null, // Número gerado pelo servidor com lock (evita duplicidade)
             data: document.getElementById('data').value,
             cliente: document.getElementById('cliente').value,
             contato: document.getElementById('contato').value, // INFO ENVIADA PARA O DRIVE
@@ -329,13 +339,18 @@ Segue dados do seu pedido:
 
         try {
             const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(dados) });
-            alert('✅ Pedido Salvo com Sucesso!');
+            if (!response.ok) throw new Error('Servidor retornou erro: ' + response.status);
+            const texto = await response.text();
+            // Servidor retorna "Sucesso:NNN" onde NNN é o número gerado com lock
+            if (texto && texto.startsWith('Erro')) throw new Error(texto);
+            const numeroGerado = texto.includes(':') ? texto.split(':')[1].trim() : texto;
+            alert('✅ Pedido Nº ' + numeroGerado + ' salvo com sucesso!');
             document.getElementById('formPedido').reset();
             limparAssinatura();
             document.getElementById('total-geral').innerText = "0";
-            location.reload(); 
+            location.reload();
         } catch(e) { 
-            alert('Erro ao salvar'); 
+            alert('❌ Erro ao salvar: ' + e.message); 
             btn.disabled = false; 
             btn.innerText = "💾 Salvar Pedido"; 
         }
