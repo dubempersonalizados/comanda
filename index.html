@@ -73,6 +73,7 @@
 		<div class="field"><label>Atendente</label><select id="atendente"><option value="">Selecione...</option><option>Fernanda</option><option>Mayara</option><option>Cláudia</option><option>John</option><option>Pedro</option><option>Roger</option></select></div>
         <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome completo do cliente"></div>
         <div class="field"><label>Contato (WhatsApp)</label><input type="text" id="contato" placeholder="5511999999999"></div>
+        <div class="field"><label>Endereço</label><input type="text" id="endereco" placeholder="Rua, número, bairro, cidade"></div>
     </div>
 
     <div class="grid">
@@ -157,7 +158,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbyv7Xrgcn1CaG0HaoneFFOAxQLQBRnOKBcaj0NVM8VPG_edEScCJxjXrR8UhMxfuJ8ZRA/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyrSRFWBz19Au5jBq_t3AErzt7RVguU-elXSpXTUYFnAOODYfv7Y7oBsMkTbjIfb42J5g/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -310,6 +311,7 @@ Segue dados do seu pedido:
             data: document.getElementById('data').value,
             cliente: document.getElementById('cliente').value,
             contato: document.getElementById('contato').value, // INFO ENVIADA PARA O DRIVE
+            endereco: document.getElementById('endereco').value,
             dataProducao: document.getElementById('dataProducao').value,
             prevEntrega: document.getElementById('prevEntrega').value,
             produto: document.getElementById('produto').value,
