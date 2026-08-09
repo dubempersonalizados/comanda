@@ -22,6 +22,12 @@
             outline: none; 
             font-size: 13px; 
             background: #fff; 
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--destaque);
+            box-shadow: 0 0 0 1px var(--destaque), 0 0 10px rgba(255, 140, 0, 0.55);
         }
 
         .quadros-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0; }
@@ -169,7 +175,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzVRkF5IF1e-4NfpdfmlzUfGSwqX5Uru8Kuk6GZBycN0dvPpMi7kE3hfeWvd-I5oVax/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz3gLX0HiMejpdnWmO1g0h-uX8zZvoMGbSkZCBYamwwr5aXfG5KVPjrL4cUWsDFKuQDEw/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -432,7 +438,6 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
                 numero: numero,
                 data: document.getElementById('data').value,
                 cliente: document.getElementById('cliente').value,
-                status: document.getElementById('status').value,
                 forma: pagto.forma,
                 recebido: pagto.valor
             };
