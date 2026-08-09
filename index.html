@@ -30,6 +30,12 @@
             box-shadow: 0 0 0 1px var(--destaque), 0 0 10px rgba(255, 140, 0, 0.55);
         }
 
+        .alerta {
+            border-color: #e74c3c !important;
+            box-shadow: 0 0 0 1px #e74c3c, 0 0 10px rgba(231, 76, 60, 0.5) !important;
+            background: #fff5f5 !important;
+        }
+
         .quadros-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 15px 0; }
         .quadro { border: 1px solid #000; border-top: 4px solid var(--destaque); padding: 12px; border-radius: 8px; background: #fafafa; }
         .quadro h4 { margin: 0 0 10px 0; text-align: center; color: var(--primary); }
@@ -210,7 +216,7 @@
         const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); 
         if(e.touches) e.preventDefault(); 
     }
-    function stop() { desenhando = false; }
+    function stop() { desenhando = false; salvarRascunho(); }
 
     canvas.addEventListener('mousedown', start);
     canvas.addEventListener('mousemove', move);
@@ -223,6 +229,7 @@
         ctx.clearRect(0,0,canvas.width,canvas.height); 
         jaAssinou = false; 
         document.getElementById('assinatura-imagem').src = "";
+        salvarRascunho();
     }
 
     function mascaraMoeda(i) {
@@ -248,6 +255,7 @@
         select.className = 'forma-pagto';
         select.innerHTML = '<option value="">Selecione...</option><option>Pix</option><option>Dinheiro</option><option>Cartão</option>';
         select.value = formaValor || "";
+        select.dataset.prev = formaValor || "";
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'valor-pagto';
@@ -296,7 +304,77 @@
         const aReceber = total - recebido;
         document.getElementById('recebido').value = "R$ " + recebido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
         document.getElementById('aReceber').value = "R$ " + aReceber.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        const recEl = document.getElementById('recebido');
+        if (total > 0 && recebido > total) recEl.classList.add('alerta');
+        else recEl.classList.remove('alerta');
         atualizarLinhasPagamento();
+    }
+
+    const CAMPOS_RASCUNHO = ['atendente','cliente','contato','endereco','produto','sublimacao','gola','tecido','corte','designer','valor','prevEntrega','status','costura','secao','corteGolaPrint','corteMangaPrint','observacao'];
+
+    function salvarRascunho() {
+        const r = { campos: {}, qtd: {}, pagamentos: [] };
+        CAMPOS_RASCUNHO.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) r.campos[id] = el.value;
+        });
+        document.querySelectorAll('.qtd').forEach(i => {
+            if (i.value) r.qtd[i.closest('.quadro').dataset.categoria + '|' + i.dataset.tam] = i.value;
+        });
+        r.pagamentos = getPagamentos().filter(p => p.forma || p.num > 0);
+        try { if (jaAssinou && canvas.width > 0) r.assinatura = canvas.toDataURL('image/png'); } catch(e) {}
+        localStorage.setItem('rascunhoPedido', JSON.stringify(r));
+    }
+
+    function restaurarRascunho() {
+        let r = null;
+        try { r = JSON.parse(localStorage.getItem('rascunhoPedido')); } catch(e) { return; }
+        if (!r) return;
+        if (r.campos) {
+            CAMPOS_RASCUNHO.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && r.campos[id] !== undefined && r.campos[id] !== null) el.value = r.campos[id];
+            });
+        }
+        if (r.qtd) {
+            document.querySelectorAll('.qtd').forEach(i => {
+                const key = i.closest('.quadro').dataset.categoria + '|' + i.dataset.tam;
+                if (r.qtd[key]) i.value = r.qtd[key];
+            });
+            let s = 0; document.querySelectorAll('.qtd').forEach(q => s += (parseInt(q.value) || 0));
+            document.getElementById('total-geral').innerText = s;
+        }
+        if (Array.isArray(r.pagamentos) && r.pagamentos.length) {
+            const container = document.getElementById('pagamentos');
+            container.innerHTML = '';
+            r.pagamentos.forEach(p => container.appendChild(criarLinhaPagamento(p.forma || "", p.valor || "")));
+        }
+        if (r.assinatura) {
+            const img = new Image();
+            img.onload = () => {
+                const c = document.getElementById('canvas-assinatura');
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                jaAssinou = true;
+                document.getElementById('assinatura-imagem').src = r.assinatura;
+            };
+            img.src = r.assinatura;
+        }
+        calcFin();
+    }
+
+    function evitarFormaDuplicada(e) {
+        if (!e.target.classList.contains('forma-pagto')) return;
+        const sel = e.target;
+        const escolhida = sel.value;
+        if (!escolhida) { sel.dataset.prev = ""; return; }
+        const duplicada = Array.from(document.querySelectorAll('.forma-pagto'))
+            .some(s => s !== sel && s.value === escolhida);
+        if (duplicada) {
+            alert('⚠️ A forma "' + escolhida + '" já está sendo usada em outra linha. Escolha outra.');
+            sel.value = sel.dataset.prev || "";
+        } else {
+            sel.dataset.prev = escolhida;
+        }
     }
 
     document.querySelectorAll('.qtd').forEach(i => i.addEventListener('input', () => {
@@ -388,6 +466,12 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             alert('⚠️ Informe ao menos uma forma de pagamento com valor.');
             return;
         }
+        const totalPedido = parseMoeda(document.getElementById('valor').value);
+        const somaPagamentos = pagamentos.reduce((s, p) => s + p.num, 0);
+        if (totalPedido > 0 && somaPagamentos > totalPedido) {
+            alert('⚠️ A soma das formas de pagamento (' + document.getElementById('recebido').value + ') é maior que o Valor Total (' + document.getElementById('valor').value + '). Confira os valores.');
+            return;
+        }
         const principal = pagamentos[0];
         const extras = pagamentos.slice(1);
 
@@ -470,6 +554,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             document.getElementById('formPedido').reset();
             limparAssinatura();
             document.getElementById('total-geral').innerText = "0";
+            localStorage.removeItem('rascunhoPedido');
             location.reload();
         } catch(e) { 
             alert('❌ Erro ao salvar: ' + e.message); 
@@ -504,6 +589,10 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         inicializarDatas();
         ajustarCanvas();
         window.addEventListener('resize', ajustarCanvas);
+        document.getElementById('formPedido').addEventListener('input', salvarRascunho);
+        document.getElementById('formPedido').addEventListener('change', salvarRascunho);
+        document.getElementById('pagamentos').addEventListener('change', evitarFormaDuplicada);
+        restaurarRascunho();
         calcFin();
     };
 </script>
