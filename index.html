@@ -408,18 +408,18 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             return;
         }
 
+        const totalPedido = parseMoeda(document.getElementById('valor').value);
         const pagamentos = getPagamentos().filter(p => p.forma && p.num > 0);
-        if (pagamentos.length === 0) {
+        if (totalPedido > 0 && pagamentos.length === 0) {
             alert('⚠️ Informe ao menos uma forma de pagamento com valor.');
             return;
         }
-        const totalPedido = parseMoeda(document.getElementById('valor').value);
         const somaPagamentos = pagamentos.reduce((s, p) => s + p.num, 0);
         if (totalPedido > 0 && somaPagamentos > totalPedido) {
             alert('⚠️ A soma das formas de pagamento (' + document.getElementById('recebido').value + ') é maior que o Valor Total (' + document.getElementById('valor').value + '). Confira os valores.');
             return;
         }
-        const principal = pagamentos[0];
+        const principal = pagamentos[0] || { valor: "", forma: "" };
         const extras = pagamentos.slice(1);
 
         const btn = document.getElementById('btn-save'); 
