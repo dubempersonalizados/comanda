@@ -90,10 +90,11 @@
     <div class="grid">
         <div class="field"><label>Data Pedido</label><input type="text" id="data" readonly></div>
 		<div class="field"><label>Atendente</label><select id="atendente"><option value="">Selecione...</option><option>Fernanda</option><option>Mayara</option><option>Cláudia</option><option>John</option><option>Pedro</option><option>Yago</option></select></div>
-        <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome completo do cliente"></div>
+        <div class="field"><label>Cliente</label><input type="text" id="cliente" placeholder="Nome completo do cliente" list="lista-clientes"></div>
         <div class="field"><label>Contato (WhatsApp)</label><input type="text" id="contato" placeholder="5511999999999"></div>
         <div class="field"><label>Endereço</label><input type="text" id="endereco" placeholder="Rua, número, bairro, cidade"></div>
     </div>
+    <datalist id="lista-clientes"></datalist>
 
     <div class="grid">
         <div class="field"><label>Produto</label><input type="text" id="produto" placeholder="Descrição detalhada do produto"></div>
@@ -398,6 +399,30 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
     }
 
+    function getClientesSalvos() {
+        try { return JSON.parse(localStorage.getItem('clientesSalvos') || '[]'); } catch(e) { return []; }
+    }
+
+    function atualizarDatalistClientes() {
+        const dl = document.getElementById('lista-clientes');
+        dl.innerHTML = '';
+        getClientesSalvos().forEach(c => {
+            const op = document.createElement('option');
+            op.value = c;
+            dl.appendChild(op);
+        });
+    }
+
+    function salvarClienteLocal(nome) {
+        if (!nome) return;
+        const lista = getClientesSalvos();
+        if (lista.some(c => c.toLowerCase() === nome.toLowerCase())) return;
+        lista.push(nome);
+        lista.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        localStorage.setItem('clientesSalvos', JSON.stringify(lista));
+        atualizarDatalistClientes();
+    }
+
     async function salvarDados() {
         // Validação dos campos obrigatórios
         const cliente = document.getElementById('cliente').value.trim();
@@ -486,6 +511,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             if (texto && texto.startsWith('Erro')) throw new Error(texto);
             const numeroGerado = texto.includes(':') ? texto.split(':')[1].trim() : texto;
 
+            salvarClienteLocal(document.getElementById('cliente').value);
+
             // Formas complementares: linha separada sem gerar novo número nem PDF/TXT
             let errosExtras = [];
             for (const extra of extras) {
@@ -536,6 +563,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         ajustarCanvas();
         window.addEventListener('resize', ajustarCanvas);
         document.getElementById('pagamentos').addEventListener('change', evitarFormaDuplicada);
+        atualizarDatalistClientes();
         calcFin();
     };
 </script>
