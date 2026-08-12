@@ -193,7 +193,7 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzSiG6IHQwdpUYC_dAHYt8qYLGTeuyg7ZKUFkr3Ak8VDqMHmA9oEUVw-3FETUk443vpqg/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzTXF739D8RtnrYHin8ybAshJHv_XRvuvOx95YUBQp0b_iZzZXfEr3SEDfwOBmRC6qehg/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -507,6 +507,15 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         throw ultimoErro;
     }
 
+    async function verificarStatus(token) {
+        try {
+            const r = await fetch(scriptURL + '?acao=status&token=' + encodeURIComponent(token) + '&_=' + Date.now(), { cache: 'no-store', redirect: 'follow' });
+            const t = (await r.text() || '').trim();
+            if (t && t.startsWith('Sucesso:')) return t.split(':')[1].trim();
+        } catch (e) {}
+        return null;
+    }
+
     async function salvarDados() {
         // Validação dos campos obrigatórios
         const cliente = document.getElementById('cliente').value.trim();
@@ -585,7 +594,16 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         }
 
         try {
-            const texto = await enviarComRetry(dados, 3);
+            let texto;
+            try {
+                texto = await enviarComRetry(dados, 2);
+            } catch (e) {
+                // O POST pode responder 404 mesmo com o pedido salvo no servidor.
+                // Confere via GET se a gravação realmente ocorreu antes de dar erro.
+                const verificado = await verificarStatus(tokenPedidoAtual);
+                if (!verificado) throw e;
+                texto = 'Sucesso:' + verificado;
+            }
             const numeroGerado = texto.includes(':') ? texto.split(':')[1].trim() : texto;
 
             tokenPedidoAtual = null;
