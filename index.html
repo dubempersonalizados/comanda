@@ -175,14 +175,25 @@
 
     <div class="buttons no-print">
         <button type="button" class="btn-save" onclick="salvarDados()" id="btn-save">💾 Salvar Pedido</button>
-        <button type="button" class="btn-wa" onclick="enviarWhatsApp()">📱 WhatsApp</button>
+        <button type="button" id="btn-wa-salvo" class="btn-wa" style="display:none;" onclick="abrirModalWhatsApp()">💬 WhatsApp Nº <span id="lbl-wa-num"></span></button>
         <button type="button" class="btn-print" onclick="gerarPDF()">🖨️ PDF</button>
     </div>
 </div>
 </form>
 
+<div id="modal-wa" class="no-print" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.55); z-index:99999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:18px; width:92%; max-width:620px; max-height:85vh; overflow:auto; box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+        <h3 style="margin-top:0; color:var(--primary); border-bottom:2px solid var(--light); padding-bottom:10px;">Pedido Nº <span id="modal-num"></span></h3>
+        <textarea id="modal-msg" rows="16" readonly style="width:100%; box-sizing:border-box; font-family:Consolas, monospace; font-size:12px; resize:vertical;"></textarea>
+        <div class="buttons no-print" style="margin-top:12px;">
+            <button type="button" class="btn-wa" onclick="enviarWhatsAppSalvo()">📱 Enviar via WhatsApp</button>
+            <button type="button" class="btn-print" onclick="fecharModalWhatsApp()" style="background:#95a5a6;">Fechar</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwDeplNu7m_uIcv8mUoo9gA2yzLx_Obgiu-Sw8OM-AT1q_TPzrSFCwUESSkezLHY8qCCA/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzSiG6IHQwdpUYC_dAHYt8qYLGTeuyg7ZKUFkr3Ak8VDqMHmA9oEUVw-3FETUk443vpqg/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -343,50 +354,26 @@
         setTimeout(() => { document.title = originalTitle; }, 1000);
     }
 
-    function enviarWhatsApp() {
-        const num = document.getElementById('display-numero').innerText;
-        const cli = document.getElementById('cliente').value;
-		const prod = document.getElementById('produto').value;
-		const tec = document.getElementById('tecido').value;
-        const dat = document.getElementById('data').value;
-        const ent = document.getElementById('prevEntrega').value;
-        const tot = document.getElementById('total-geral').innerText;
-        const vT = document.getElementById('valor').value;
-        const vR = document.getElementById('recebido').value;
-        const vA = document.getElementById('aReceber').value;
-        const fone = document.getElementById('contato').value.replace(/\D/g,"");
-        const pags = getPagamentos().filter(p => p.forma && p.num > 0);
+    function montarMensagemPedido(ped) {
+        const pags = (ped.pags || []).filter(p => p.forma && p.num > 0);
         const detPag = pags.length ? pags.map(p => `${p.forma}: ${p.valor}`).join(" | ") : "-";
-
-        if (!fone) { alert("Por favor, preencha o contato."); return; }
-
-        let grade = "";
-        document.querySelectorAll('.quadro').forEach(q => {
-            let cat = q.querySelector('h4').innerText;
-            let sub = "";
-            q.querySelectorAll('.qtd').forEach(i => { 
-                if(i.value > 0) sub += `\n   - ${i.getAttribute('data-tam')}: ${i.value}`; 
-            });
-            if(sub) grade += `\n*${cat}*${sub}`;
-        });
-
-        const msg = `*Obrigado por ter escolhido a Loja DUBEM!*
+        return `*Obrigado por ter escolhido a Loja DUBEM!*
 
 Segue dados do seu pedido:
-*Nº do Pedido:* ${num}
-*Cliente:* ${cli}
-*Produto:* ${prod}
-*Tecido:* ${tec}
-*Data do Pedido:* ${dat}
-*Prev. de Entrega:* ${ent}
+*Nº do Pedido:* ${ped.numero}
+*Cliente:* ${ped.cliente}
+*Produto:* ${ped.produto}
+*Tecido:* ${ped.tecido}
+*Data do Pedido:* ${ped.data}
+*Prev. de Entrega:* ${ped.prevEntrega}
 
-*Grade de tamanhos:*${grade}
+*Grade de tamanhos:*${ped.grade || ''}
 
-*Quantidade total:* ${tot}
-*Valor Total:* ${vT}
-*Valor Recebido:* ${vR}
+*Quantidade total:* ${ped.qtdTotal}
+*Valor Total:* ${ped.valor}
+*Valor Recebido:* ${ped.recebido}
 *Pagamentos:* ${detPag}
-*Valor à Pagar:* ${vA}
+*Valor à Pagar:* ${ped.aReceber}
 
 *Obrigado pela preferência!*
 
@@ -395,7 +382,73 @@ Caro cliente;
 Prazo mínimo de entrega 12 dias úteis. 
 Troca, somente peças com defeito em até 24h.
 Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
+    }
 
+    function montarGradeTexto(detalhesTamanhos) {
+        let grade = "";
+        const porCat = {};
+        (detalhesTamanhos || []).forEach(i => {
+            (porCat[i.categoria] = porCat[i.categoria] || []).push(i);
+        });
+        Object.keys(porCat).forEach(cat => {
+            grade += `\n*${cat}*`;
+            porCat[cat].forEach(i => { grade += `\n   - ${i.tamanho}: ${i.quantidade}`; });
+        });
+        return grade;
+    }
+
+    function salvarUltimoPedido(ped) {
+        ultimoPedido = ped;
+        try { sessionStorage.setItem('ultimoPedido', JSON.stringify(ped)); } catch(e) {}
+        const btn = document.getElementById('btn-wa-salvo');
+        const lbl = document.getElementById('lbl-wa-num');
+        if (btn) btn.style.display = 'block';
+        if (lbl) lbl.innerText = ped.numero;
+    }
+
+    function armarOcultarAposEdicao() {
+        const form = document.getElementById('formPedido');
+        const ocultar = () => {
+            const btn = document.getElementById('btn-wa-salvo');
+            if (btn) btn.style.display = 'none';
+            ultimoPedido = null;
+            try { sessionStorage.removeItem('ultimoPedido'); } catch(e) {}
+            form.removeEventListener('input', ocultar, true);
+            form.removeEventListener('change', ocultar, true);
+        };
+        form.addEventListener('input', ocultar, true);
+        form.addEventListener('change', ocultar, true);
+    }
+
+    function restaurarUltimoPedido() {
+        try {
+            const salvo = sessionStorage.getItem('ultimoPedido');
+            if (!salvo) return;
+            const p = JSON.parse(salvo);
+            if (!p || !p.numero) return;
+            ultimoPedido = p;
+            const btn = document.getElementById('btn-wa-salvo');
+            const lbl = document.getElementById('lbl-wa-num');
+            if (btn) { btn.style.display = 'block'; if (lbl) lbl.innerText = p.numero; }
+        } catch(e) {}
+    }
+
+    function abrirModalWhatsApp() {
+        if (!ultimoPedido) return;
+        document.getElementById('modal-num').innerText = ultimoPedido.numero;
+        document.getElementById('modal-msg').value = montarMensagemPedido(ultimoPedido);
+        document.getElementById('modal-wa').style.display = 'flex';
+    }
+
+    function fecharModalWhatsApp() {
+        document.getElementById('modal-wa').style.display = 'none';
+    }
+
+    function enviarWhatsAppSalvo() {
+        if (!ultimoPedido) return;
+        const fone = String(ultimoPedido.contato || '').replace(/\D/g, "");
+        if (!fone) { alert("Pedido sem contato cadastrado."); return; }
+        const msg = montarMensagemPedido(ultimoPedido);
         window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
     }
 
@@ -424,6 +477,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     }
 
     let tokenPedidoAtual = null;
+    let numeroReservado = null;
+    let ultimoPedido = null;
 
     function gerarToken() {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -464,10 +519,6 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
         const totalPedido = parseMoeda(document.getElementById('valor').value);
         const pagamentos = getPagamentos().filter(p => p.forma && p.num > 0);
-        if (totalPedido > 0 && pagamentos.length === 0) {
-            alert('⚠️ Informe ao menos uma forma de pagamento com valor.');
-            return;
-        }
         const somaPagamentos = pagamentos.reduce((s, p) => s + p.num, 0);
         if (totalPedido > 0 && somaPagamentos > totalPedido) {
             alert('⚠️ A soma das formas de pagamento (' + document.getElementById('recebido').value + ') é maior que o Valor Total (' + document.getElementById('valor').value + '). Confira os valores.');
@@ -551,10 +602,29 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             } else {
                 alert('✅ Pedido Nº ' + numeroGerado + ' salvo com sucesso!');
             }
+            salvarUltimoPedido({
+                numero: numeroGerado,
+                contato: document.getElementById('contato').value,
+                cliente: document.getElementById('cliente').value,
+                produto: document.getElementById('produto').value,
+                tecido: document.getElementById('tecido').value,
+                data: document.getElementById('data').value,
+                prevEntrega: document.getElementById('prevEntrega').value,
+                qtdTotal: document.getElementById('total-geral').innerText,
+                valor: document.getElementById('valor').value,
+                recebido: document.getElementById('recebido').value,
+                aReceber: document.getElementById('aReceber').value,
+                pags: pagamentos,
+                grade: montarGradeTexto(gradeArr)
+            });
+            btn.disabled = false;
+            btn.innerText = "💾 Salvar Pedido";
+            armarOcultarAposEdicao();
             document.getElementById('formPedido').reset();
             limparAssinatura();
             document.getElementById('total-geral').innerText = "0";
-            location.reload();
+            calcFin();
+            inicializarDatas();
         } catch(e) { 
             alert('❌ Erro ao salvar: ' + e.message); 
             btn.disabled = false; 
@@ -578,18 +648,22 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     async function carregarNumeroPedido() {
         const el = document.getElementById('display-numero');
         el.innerText = '...';
+        if (!tokenPedidoAtual) tokenPedidoAtual = gerarToken();
         const controle = new AbortController();
-        const timer = setTimeout(() => controle.abort(), 25000);
+        const timer = setTimeout(() => controle.abort(), 30000);
+        let numero = null;
         try {
             const r = await fetch(scriptURL + '?_=' + Date.now(), { cache: 'no-store', redirect: 'follow', signal: controle.signal });
             const t = (await r.text() || '').trim();
             const n = Number(t);
-            el.innerText = (!isNaN(n) && n > 0 && t.length <= 10) ? t : '· · ·';
+            if (!isNaN(n) && n > 0 && t.length <= 10) numero = n;
         } catch (e) {
-            el.innerText = '· · ·';
         } finally {
             clearTimeout(timer);
         }
+        el.innerText = numero != null ? String(numero) : '· · ·';
+        numeroReservado = numero;
+        return numero;
     }
 
     function inicializarDatas() {
@@ -608,6 +682,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         document.getElementById('pagamentos').addEventListener('change', evitarFormaDuplicada);
         atualizarDatalistClientes();
         calcFin();
+        restaurarUltimoPedido();
     };
 </script>
 </body>
