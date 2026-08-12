@@ -186,7 +186,8 @@
         <h3 style="margin-top:0; color:var(--primary); border-bottom:2px solid var(--light); padding-bottom:10px;">Pedido Nº <span id="modal-num"></span></h3>
         <textarea id="modal-msg" rows="16" readonly style="width:100%; box-sizing:border-box; font-family:Consolas, monospace; font-size:12px; resize:vertical;"></textarea>
         <div class="buttons no-print" style="margin-top:12px;">
-            <button type="button" class="btn-wa" onclick="enviarWhatsAppSalvo()">📱 Enviar via WhatsApp</button>
+            <button type="button" class="btn-wa" onclick="enviarWhatsAppSalvo()">📱 Enviar via WhatsApp Web</button>
+            <button type="button" class="btn-save" onclick="copiarMensagem()" style="background:#34495e;">📋 Copiar mensagem</button>
             <button type="button" class="btn-print" onclick="fecharModalWhatsApp()" style="background:#95a5a6;">Fechar</button>
         </div>
     </div>
@@ -444,12 +445,38 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         document.getElementById('modal-wa').style.display = 'none';
     }
 
+    function abrirWhatsApp(numeroWhats, msg) {
+        const base = `https://web.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
+        const nova = window.open(base, '_blank');
+        if (!nova) window.location.href = base;
+    }
+
     function enviarWhatsAppSalvo() {
         if (!ultimoPedido) return;
         const fone = String(ultimoPedido.contato || '').replace(/\D/g, "");
         if (!fone) { alert("Pedido sem contato cadastrado."); return; }
         const msg = montarMensagemPedido(ultimoPedido);
-        window.open(`https://wa.me/${fone}?text=${encodeURIComponent(msg)}`);
+        abrirWhatsApp(fone, msg);
+    }
+
+    function copiarMensagem() {
+        if (!ultimoPedido) return;
+        const texto = montarMensagemPedido(ultimoPedido);
+        const ta = document.getElementById('modal-msg');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto).then(() => alert('✅ Mensagem copiada! Cole no WhatsApp.'), () => copiarFallback(ta));
+        } else {
+            copiarFallback(ta);
+        }
+    }
+
+    function copiarFallback(ta) {
+        ta.removeAttribute('readonly');
+        ta.select();
+        ta.setSelectionRange(0, ta.value.length);
+        document.execCommand('copy');
+        ta.setAttribute('readonly', '');
+        alert('✅ Mensagem copiada! Cole no WhatsApp.');
     }
 
     function getClientesSalvos() {
