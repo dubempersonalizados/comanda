@@ -182,7 +182,7 @@
 </form>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbz3gLX0HiMejpdnWmO1g0h-uX8zZvoMGbSkZCBYamwwr5aXfG5KVPjrL4cUWsDFKuQDEw/exec'; 
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwDeplNu7m_uIcv8mUoo9gA2yzLx_Obgiu-Sw8OM-AT1q_TPzrSFCwUESSkezLHY8qCCA/exec'; 
 
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
@@ -423,6 +423,35 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         atualizarDatalistClientes();
     }
 
+    let tokenPedidoAtual = null;
+
+    function gerarToken() {
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    }
+
+    async function enviarComRetry(dados, tentativas) {
+        let ultimoErro = null;
+        for (let i = 0; i < tentativas; i++) {
+            try {
+                const r = await fetch(scriptURL + '?t=' + Date.now() + i, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    cache: 'no-store',
+                    body: JSON.stringify(dados)
+                });
+                const texto = await r.text();
+                if (!r.ok) throw new Error('Servidor retornou erro: ' + r.status);
+                if (texto && texto.startsWith('Erro')) throw new Error(texto);
+                return texto;
+            } catch (e) {
+                ultimoErro = e;
+                if (i < tentativas - 1) await new Promise(res => setTimeout(res, 2000 * (i + 1)));
+            }
+        }
+        throw ultimoErro;
+    }
+
     async function salvarDados() {
         // Validação dos campos obrigatórios
         const cliente = document.getElementById('cliente').value.trim();
@@ -447,6 +476,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         const principal = pagamentos[0] || { valor: "", forma: "" };
         const extras = pagamentos.slice(1);
 
+        if (!tokenPedidoAtual) tokenPedidoAtual = gerarToken();
+
         const btn = document.getElementById('btn-save'); 
         btn.disabled = true; btn.innerText = "Salvando...";
         
@@ -457,6 +488,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
         const dados = {
             numero: null, // Número gerado pelo servidor com lock (evita duplicidade)
+            token: tokenPedidoAtual,
             data: document.getElementById('data').value,
             cliente: document.getElementById('cliente').value,
             contato: document.getElementById('contato').value, // INFO ENVIADA PARA O DRIVE
@@ -488,36 +520,30 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             })()
         };
 
-        async function postExtra(pagto, numero) {
+        async function postExtra(pagto, numero, idx) {
             const extra = {
                 modoExtra: true,
                 numero: numero,
                 data: document.getElementById('data').value,
                 cliente: document.getElementById('cliente').value,
                 forma: pagto.forma,
-                recebido: pagto.valor
+                recebido: pagto.valor,
+                token: numero + '_extra_' + idx + '_' + pagto.forma
             };
-            const r = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(extra) });
-            if (!r.ok) throw new Error('Servidor retornou erro: ' + r.status);
-            const t = await r.text();
-            if (t && t.startsWith('Erro')) throw new Error(t);
+            await enviarComRetry(extra, 2);
         }
 
         try {
-            const response = await fetch(scriptURL, { method: 'POST', body: JSON.stringify(dados) });
-            if (!response.ok) throw new Error('Servidor retornou erro: ' + response.status);
-            const texto = await response.text();
-            // Servidor retorna "Sucesso:NNN" onde NNN é o número gerado com lock
-            if (texto && texto.startsWith('Erro')) throw new Error(texto);
+            const texto = await enviarComRetry(dados, 3);
             const numeroGerado = texto.includes(':') ? texto.split(':')[1].trim() : texto;
 
+            tokenPedidoAtual = null;
             salvarClienteLocal(document.getElementById('cliente').value);
 
-            // Formas complementares: linha separada sem gerar novo número nem PDF/TXT
             let errosExtras = [];
-            for (const extra of extras) {
-                try { await postExtra(extra, numeroGerado); }
-                catch(e2) { errosExtras.push(extra.forma + ': ' + e2.message); }
+            for (let idx = 0; idx < extras.length; idx++) {
+                try { await postExtra(extras[idx], numeroGerado, idx); }
+                catch(e2) { errosExtras.push(extras[idx].forma + ': ' + e2.message); }
             }
 
             if (errosExtras.length > 0) {
@@ -549,13 +575,30 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         return dataFinal;
     }
 
+    async function carregarNumeroPedido() {
+        const el = document.getElementById('display-numero');
+        el.innerText = '...';
+        const controle = new AbortController();
+        const timer = setTimeout(() => controle.abort(), 25000);
+        try {
+            const r = await fetch(scriptURL + '?_=' + Date.now(), { cache: 'no-store', redirect: 'follow', signal: controle.signal });
+            const t = (await r.text() || '').trim();
+            const n = Number(t);
+            el.innerText = (!isNaN(n) && n > 0 && t.length <= 10) ? t : '· · ·';
+        } catch (e) {
+            el.innerText = '· · ·';
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
     function inicializarDatas() {
         const hoje = new Date();
         const formatar = (d) => d.toLocaleDateString('pt-BR');
         document.getElementById('data').value = formatar(hoje);
         document.getElementById('dataProducao').value = formatar(adicionarDiasUteis(hoje, 5));
         document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, 15));
-        fetch(scriptURL).then(r => r.text()).then(t => document.getElementById('display-numero').innerText = t);
+        carregarNumeroPedido();
     }
 
     window.onload = () => {
