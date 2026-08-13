@@ -99,7 +99,7 @@
     <div class="grid">
         <div class="field"><label>Produto</label><input type="text" id="produto" placeholder="Descrição detalhada do produto"></div>
         <div class="field"><label>Data Produção (+5d úteis)</label><input type="text" id="dataProducao" readonly></div>
-        <div class="field"><label>Prev. Entrega (+15d úteis)</label><input type="text" id="prevEntrega"></div>
+        <div class="field"><label>Prev. Entrega (+12d úteis)</label><input type="text" id="prevEntrega"></div>
     </div>
 
     <div class="grid">
@@ -716,7 +716,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         const formatar = (d) => d.toLocaleDateString('pt-BR');
         document.getElementById('data').value = formatar(hoje);
         document.getElementById('dataProducao').value = formatar(adicionarDiasUteis(hoje, 5));
-        document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, 15));
+        document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, 12));
         carregarNumeroPedido();
     }
 
