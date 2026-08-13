@@ -14,6 +14,7 @@
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .field { display: flex; flex-direction: column; }
         label { font-weight: bold; font-size: 10px; margin-bottom: 4px; color: #555; text-transform: uppercase; }
+        .prazo-inline { width: 28px; border: 1px solid #ccc; border-radius: 3px; padding: 0 2px; text-align: center; font-size: 10px; height: 14px; margin: 0 2px; background: #fff; color: #333; }
         
         input, select, textarea { 
             padding: 8px; 
@@ -98,8 +99,8 @@
 
     <div class="grid">
         <div class="field"><label>Produto</label><input type="text" id="produto" placeholder="Descrição detalhada do produto"></div>
-        <div class="field"><label>Data Produção (+5d úteis)</label><input type="text" id="dataProducao" readonly></div>
-        <div class="field"><label>Prev. Entrega (+12d úteis)</label><input type="text" id="prevEntrega"></div>
+        <div class="field"><label>Data Produção (+<input type="number" class="prazo-inline" id="prazoProducaoDias" min="0" max="60" title="Altera o prazo de produção padrão">d úteis)</label><input type="text" id="dataProducao" readonly></div>
+        <div class="field"><label>Prev. Entrega (+<input type="number" class="prazo-inline" id="prazoEntregaDias" min="0" max="90" title="Altera o prazo de entrega padrão">d úteis)</label><input type="text" id="prevEntrega"></div>
     </div>
 
     <div class="grid">
@@ -196,6 +197,10 @@
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzTXF739D8RtnrYHin8ybAshJHv_XRvuvOx95YUBQp0b_iZzZXfEr3SEDfwOBmRC6qehg/exec'; 
 
+    // ⚙️ Prazos em dias úteis — também configuráveis na tela do formulário (persistem no navegador)
+    let PRAZO_PRODUCAO_DIAS = 5;
+    let PRAZO_ENTREGA_DIAS = 12;
+
     const canvas = document.getElementById('canvas-assinatura');
     const ctx = canvas.getContext('2d');
     let desenhando = false;
@@ -242,6 +247,26 @@
         ctx.clearRect(0,0,canvas.width,canvas.height); 
         jaAssinou = false; 
         document.getElementById('assinatura-imagem').src = "";
+    }
+
+    function marcarSujo(e) {
+        if (e && e.target && (e.target.id === 'prazoProducaoDias' || e.target.id === 'prazoEntregaDias')) return;
+        formularioSujo = true;
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (!formularioSujo) return;
+        e.preventDefault();
+        e.returnValue = '';
+    });
+
+    function fingerprintFormulario() {
+        const qtds = Array.from(document.querySelectorAll('.qtd'))
+            .filter(i => i.value > 0)
+            .map(i => (i.closest('.quadro').dataset.categoria || '') + ':' + i.dataset.tam + ':' + i.value);
+        const ids = ['data','cliente','contato','endereco','dataProducao','prevEntrega','produto','sublimacao','gola','tecido','corte','designer','valor','status','costura','secao','corteGolaPrint','corteMangaPrint','observacao','atendente'];
+        const valores = ids.map(id => document.getElementById(id).value);
+        return JSON.stringify(valores.concat([qtds]));
     }
 
     function mascaraMoeda(i) {
@@ -506,6 +531,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     let tokenPedidoAtual = null;
     let numeroReservado = null;
     let ultimoPedido = null;
+    let formularioSujo = false;
 
     function gerarToken() {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -562,6 +588,13 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         }
         const principal = pagamentos[0] || { valor: "", forma: "" };
         const extras = pagamentos.slice(1);
+
+        const fp = fingerprintFormulario();
+        let ultimoRegistro = null;
+        try { ultimoRegistro = JSON.parse(sessionStorage.getItem('ultimoFingerprint') || 'null'); } catch(e) {}
+        if (ultimoRegistro && ultimoRegistro.fp === fp) {
+            if (!confirm('⚠️ Já existe um pedido salvo com estes mesmos dados (Nº ' + ultimoRegistro.numero + ').\nSalvar um novo pedido mesmo assim?')) return;
+        }
 
         if (!tokenPedidoAtual) tokenPedidoAtual = gerarToken();
 
@@ -662,6 +695,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
                 pags: pagamentos,
                 grade: montarGradeTexto(gradeArr)
             });
+            try { sessionStorage.setItem('ultimoFingerprint', JSON.stringify({ fp: fp, numero: numeroGerado })); } catch(e) {}
+            formularioSujo = false;
             btn.disabled = false;
             btn.innerText = "💾 Salvar Pedido";
             armarOcultarAposEdicao();
@@ -711,16 +746,55 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         return numero;
     }
 
+    function atualizarPrazos() {
+        const hoje = new Date();
+        const formatar = (d) => d.toLocaleDateString('pt-BR');
+        document.getElementById('prazoProducaoDias').value = PRAZO_PRODUCAO_DIAS;
+        document.getElementById('prazoEntregaDias').value = PRAZO_ENTREGA_DIAS;
+        document.getElementById('dataProducao').value = formatar(adicionarDiasUteis(hoje, PRAZO_PRODUCAO_DIAS));
+        document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, PRAZO_ENTREGA_DIAS));
+    }
+
+    function carregarPrazosConfig() {
+        try {
+            const cfg = JSON.parse(localStorage.getItem('prazosConfig') || '{}');
+            if (typeof cfg.producao === 'number') PRAZO_PRODUCAO_DIAS = cfg.producao;
+            if (typeof cfg.entrega === 'number') PRAZO_ENTREGA_DIAS = cfg.entrega;
+        } catch(e) {}
+    }
+
+    function salvarPrazosConfig() {
+        try {
+            localStorage.setItem('prazosConfig', JSON.stringify({ producao: PRAZO_PRODUCAO_DIAS, entrega: PRAZO_ENTREGA_DIAS }));
+        } catch(e) {}
+    }
+
+    function configurarPrazos() {
+        const elProd = document.getElementById('prazoProducaoDias');
+        const elEnt = document.getElementById('prazoEntregaDias');
+        elProd.value = PRAZO_PRODUCAO_DIAS;
+        elEnt.value = PRAZO_ENTREGA_DIAS;
+        elProd.addEventListener('change', () => {
+            const v = parseInt(elProd.value, 10);
+            if (!isNaN(v) && v >= 0) { PRAZO_PRODUCAO_DIAS = v; salvarPrazosConfig(); atualizarPrazos(); }
+        });
+        elEnt.addEventListener('change', () => {
+            const v = parseInt(elEnt.value, 10);
+            if (!isNaN(v) && v >= 0) { PRAZO_ENTREGA_DIAS = v; salvarPrazosConfig(); atualizarPrazos(); }
+        });
+    }
+
     function inicializarDatas() {
         const hoje = new Date();
         const formatar = (d) => d.toLocaleDateString('pt-BR');
         document.getElementById('data').value = formatar(hoje);
-        document.getElementById('dataProducao').value = formatar(adicionarDiasUteis(hoje, 5));
-        document.getElementById('prevEntrega').value = formatar(adicionarDiasUteis(hoje, 12));
+        atualizarPrazos();
         carregarNumeroPedido();
     }
 
     window.onload = () => {
+        carregarPrazosConfig();
+        configurarPrazos();
         inicializarDatas();
         ajustarCanvas();
         window.addEventListener('resize', ajustarCanvas);
@@ -728,6 +802,11 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         atualizarDatalistClientes();
         calcFin();
         restaurarUltimoPedido();
+        const form = document.getElementById('formPedido');
+        form.addEventListener('input', marcarSujo, true);
+        form.addEventListener('change', marcarSujo, true);
+        canvas.addEventListener('mousedown', marcarSujo);
+        canvas.addEventListener('touchstart', marcarSujo);
     };
 </script>
 </body>
