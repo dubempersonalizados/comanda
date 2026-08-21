@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self' https:; frame-ancestors 'none';">
     <title>Sistema DUBEM - Pedidos</title>
     <style>
         :root { --primary: #2c3e50; --accent: #27ae60; --whatsapp: #25d366; --destaque: #ff8c00; --light: #ecf0f1; }
@@ -61,10 +62,10 @@
             margin-bottom: 15px; 
             border-left: 6px solid var(--destaque); 
         }
-        
-        .signature-box { border: 2px dashed #000; background: #ffffff !important; border-radius: 10px; touch-action: none; margin-top: 5px; position: relative; }
-        #canvas-assinatura { width: 100%; height: 160px; display: block; cursor: crosshair; }
-        #assinatura-imagem { display: none; width: 100%; height: 160px; object-fit: contain; }
+
+        .btn-loading { position:relative; color:transparent!important; pointer-events:none; }
+        .btn-loading::after { content:''; position:absolute; width:16px; height:16px; top:50%; left:50%; margin:-8px 0 0 -8px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.6s linear infinite; }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
         .buttons { display: flex; gap: 8px; margin-top: 15px; }
         button { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; color: white; font-size: 11px; }
@@ -75,9 +76,6 @@
         @media print { 
             .no-print { display: none !important; } 
             .container { box-shadow: none; width: 100%; padding: 0; border-radius: 0; }
-            #canvas-assinatura { display: none !important; }
-            #assinatura-imagem { display: block !important; }
-            .signature-box { border: 1px solid #000; }
         }
     </style>
 </head>
@@ -165,15 +163,6 @@
 
     <div class="field"><label>Observação</label><textarea id="observacao" rows="2"></textarea></div>
 
-    <div style="margin-top:15px;">
-        <label style="color:var(--destaque); font-size:11px">Assinatura do Cliente</label>
-        <div class="signature-box">
-            <canvas id="canvas-assinatura"></canvas>
-            <img id="assinatura-imagem" alt="Assinatura">
-        </div>
-        <button type="button" class="no-print" onclick="limparAssinatura()" style="background:#e74c3c; color:white; padding:5px; margin-top:5px; border:none; border-radius:4px; cursor:pointer;">Limpar Assinatura</button>
-    </div>
-
     <div class="buttons no-print">
         <button type="button" class="btn-save" onclick="salvarDados()" id="btn-save">💾 Salvar Pedido</button>
         <button type="button" id="btn-wa-salvo" class="btn-wa" style="display:none;" onclick="abrirModalWhatsApp()">💬 WhatsApp Nº <span id="lbl-wa-num"></span></button>
@@ -195,59 +184,16 @@
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzTXF739D8RtnrYHin8ybAshJHv_XRvuvOx95YUBQp0b_iZzZXfEr3SEDfwOBmRC6qehg/exec'; 
+    function escaparHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzTXF739D8RtnrYHin8ybAshJHv_XRvuvOx95YUBQp0b_iZzZXfEr3SEDfwOBmRC6qehg/exec';
 
     // ⚙️ Prazos em dias úteis — também configuráveis na tela do formulário (persistem no navegador)
     let PRAZO_PRODUCAO_DIAS = 5;
     let PRAZO_ENTREGA_DIAS = 12;
-
-    const canvas = document.getElementById('canvas-assinatura');
-    const ctx = canvas.getContext('2d');
-    let desenhando = false;
-    let jaAssinou = false; 
-
-    function ajustarCanvas() {
-        if (jaAssinou) return; 
-        const r = canvas.getBoundingClientRect();
-        canvas.width = r.width;
-        canvas.height = r.height;
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = "round";
-    }
-
-    function getPos(e) {
-        const r = canvas.getBoundingClientRect();
-        const cx = e.touches ? e.touches[0].clientX : e.clientX;
-        const cy = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: cx - r.left, y: cy - r.top };
-    }
-
-    function start(e) { 
-        desenhando = true; 
-        jaAssinou = true; 
-        const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); 
-        if(e.touches) e.preventDefault(); 
-    }
-    function move(e) { 
-        if(!desenhando) return; 
-        const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); 
-        if(e.touches) e.preventDefault(); 
-    }
-    function stop() { desenhando = false; }
-
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', move);
-    window.addEventListener('mouseup', stop);
-    canvas.addEventListener('touchstart', start, {passive: false});
-    canvas.addEventListener('touchmove', move, {passive: false});
-    canvas.addEventListener('touchend', stop);
-
-    function limparAssinatura() { 
-        ctx.clearRect(0,0,canvas.width,canvas.height); 
-        jaAssinou = false; 
-        document.getElementById('assinatura-imagem').src = "";
-    }
 
     function marcarSujo(e) {
         if (e && e.target && (e.target.id === 'prazoProducaoDias' || e.target.id === 'prazoEntregaDias')) return;
@@ -368,9 +314,6 @@
     }));
 
     function gerarPDF() {
-        const imgAssinatura = document.getElementById('assinatura-imagem');
-        if (jaAssinou) { try { imgAssinatura.src = canvas.toDataURL("image/png"); } catch(e) { imgAssinatura.src = ""; } }
-        else { imgAssinatura.src = ""; }
         const num = document.getElementById('display-numero').innerText;
         const cli = document.getElementById('cliente').value || "Cli";
         const des = document.getElementById('designer').value || "Des";
@@ -470,6 +413,12 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         document.getElementById('modal-wa').style.display = 'none';
     }
 
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('modal-wa').style.display === 'flex') {
+            fecharModalWhatsApp();
+        }
+    });
+
     function abrirWhatsApp(numeroWhats, msg) {
         const base = `https://web.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
         const nova = window.open(base, '_blank');
@@ -489,23 +438,40 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         const texto = montarMensagemPedido(ultimoPedido);
         const ta = document.getElementById('modal-msg');
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(texto).then(() => alert('✅ Mensagem copiada! Cole no WhatsApp.'), () => copiarFallback(ta));
+            navigator.clipboard.writeText(texto).then(
+                () => alert('✅ Mensagem copiada! Cole no WhatsApp.'),
+                () => copiarFallback(ta, texto)
+            );
         } else {
-            copiarFallback(ta);
+            copiarFallback(ta, texto);
         }
     }
 
-    function copiarFallback(ta) {
+    function copiarFallback(ta, texto) {
         ta.removeAttribute('readonly');
+        ta.value = texto;
         ta.select();
         ta.setSelectionRange(0, ta.value.length);
-        document.execCommand('copy');
-        ta.setAttribute('readonly', '');
-        alert('✅ Mensagem copiada! Cole no WhatsApp.');
+        try {
+            navigator.clipboard.writeText(ta.value).then(
+                () => { ta.setAttribute('readonly', ''); alert('✅ Mensagem copiada! Cole no WhatsApp.'); },
+                () => { document.execCommand('copy'); ta.setAttribute('readonly', ''); alert('✅ Mensagem copiada! Cole no WhatsApp.'); }
+            );
+        } catch(e) {
+            document.execCommand('copy');
+            ta.setAttribute('readonly', '');
+            alert('✅ Mensagem copiada! Cole no WhatsApp.');
+        }
     }
 
     function getClientesSalvos() {
-        try { return JSON.parse(localStorage.getItem('clientesSalvos') || '[]'); } catch(e) { return []; }
+        try {
+            const raw = localStorage.getItem('clientesSalvos');
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return [];
+            return parsed.filter(c => typeof c === 'string' && c.trim().length > 0 && c.length < 200).slice(0, 500);
+        } catch(e) { return []; }
     }
 
     function atualizarDatalistClientes() {
@@ -532,6 +498,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     let numeroReservado = null;
     let ultimoPedido = null;
     let formularioSujo = false;
+    let salvando = false;
 
     function gerarToken() {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
@@ -549,8 +516,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
                     body: JSON.stringify(dados)
                 });
                 const texto = await r.text();
-                if (!r.ok) throw new Error('Servidor retornou erro: ' + r.status);
-                if (texto && texto.startsWith('Erro')) throw new Error(texto);
+                if (!r.ok) throw new Error('Servidor retornou erro (status ' + r.status + ')');
+                if (texto && texto.startsWith('Erro')) throw new Error('Formato de resposta inv\u00E1lido do servidor.');
                 return texto;
             } catch (e) {
                 ultimoErro = e;
@@ -570,6 +537,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     }
 
     async function salvarDados() {
+        if (salvando) return;
         // Validação dos campos obrigatórios
         const cliente = document.getElementById('cliente').value.trim();
         const produto = document.getElementById('produto').value.trim();
@@ -593,13 +561,13 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         let ultimoRegistro = null;
         try { ultimoRegistro = JSON.parse(sessionStorage.getItem('ultimoFingerprint') || 'null'); } catch(e) {}
         if (ultimoRegistro && ultimoRegistro.fp === fp) {
-            if (!confirm('⚠️ Já existe um pedido salvo com estes mesmos dados (Nº ' + ultimoRegistro.numero + ').\nSalvar um novo pedido mesmo assim?')) return;
+            if (!confirm('⚠️ Já existe um pedido salvo com estes mesmos dados (Nº ' + String(ultimoRegistro.numero).replace(/[<>]/g,'') + ').\nSalvar um novo pedido mesmo assim?')) return;
         }
 
         if (!tokenPedidoAtual) tokenPedidoAtual = gerarToken();
 
         const btn = document.getElementById('btn-save'); 
-        btn.disabled = true; btn.innerText = "Salvando...";
+        btn.disabled = true; btn.innerText = "Salvando..."; salvando = true; btn.classList.add('btn-loading');
         
         let gradeArr = [];
         document.querySelectorAll('.qtd').forEach(i => {
@@ -633,11 +601,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             observacao: document.getElementById('observacao').value,
             quantidadeTotal: document.getElementById('total-geral').innerText,
             detalhesTamanhos: gradeArr,
-            atendente: document.getElementById('atendente').value,
-            assinatura: (function() {
-                const c = document.getElementById('canvas-assinatura');
-                try { return c && c.width > 0 ? c.toDataURL('image/png') : ''; } catch(e) { return ''; }
-            })()
+            atendente: document.getElementById('atendente').value
         };
 
         async function postExtra(pagto, numero, idx) {
@@ -699,16 +663,19 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             formularioSujo = false;
             btn.disabled = false;
             btn.innerText = "💾 Salvar Pedido";
+            salvando = false;
+            btn.classList.remove('btn-loading');
             armarOcultarAposEdicao();
             document.getElementById('formPedido').reset();
-            limparAssinatura();
             document.getElementById('total-geral').innerText = "0";
             calcFin();
             inicializarDatas();
         } catch(e) { 
-            alert('❌ Erro ao salvar: ' + e.message); 
+            alert('❌ Erro ao salvar. Verifique sua conexão e tente novamente.'); 
             btn.disabled = false; 
-            btn.innerText = "💾 Salvar Pedido"; 
+            btn.innerText = "💾 Salvar Pedido";
+            salvando = false;
+            btn.classList.remove('btn-loading');
         }
     }
 
@@ -757,9 +724,11 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
     function carregarPrazosConfig() {
         try {
-            const cfg = JSON.parse(localStorage.getItem('prazosConfig') || '{}');
-            if (typeof cfg.producao === 'number') PRAZO_PRODUCAO_DIAS = cfg.producao;
-            if (typeof cfg.entrega === 'number') PRAZO_ENTREGA_DIAS = cfg.entrega;
+            const raw = localStorage.getItem('prazosConfig');
+            if (!raw) return;
+            const cfg = JSON.parse(raw);
+            if (typeof cfg.producao === 'number' && cfg.producao >= 0 && cfg.producao <= 120) PRAZO_PRODUCAO_DIAS = cfg.producao;
+            if (typeof cfg.entrega === 'number' && cfg.entrega >= 0 && cfg.entrega <= 365) PRAZO_ENTREGA_DIAS = cfg.entrega;
         } catch(e) {}
     }
 
@@ -792,12 +761,10 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         carregarNumeroPedido();
     }
 
-    window.onload = () => {
+    document.addEventListener('DOMContentLoaded', () => {
         carregarPrazosConfig();
         configurarPrazos();
         inicializarDatas();
-        ajustarCanvas();
-        window.addEventListener('resize', ajustarCanvas);
         document.getElementById('pagamentos').addEventListener('change', evitarFormaDuplicada);
         atualizarDatalistClientes();
         calcFin();
@@ -805,9 +772,10 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         const form = document.getElementById('formPedido');
         form.addEventListener('input', marcarSujo, true);
         form.addEventListener('change', marcarSujo, true);
-        canvas.addEventListener('mousedown', marcarSujo);
-        canvas.addEventListener('touchstart', marcarSujo);
-    };
+        document.getElementById('modal-wa').addEventListener('click', function(e) {
+            if (e.target === this) fecharModalWhatsApp();
+        });
+    });
 </script>
 </body>
 </html>
