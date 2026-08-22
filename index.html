@@ -368,6 +368,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
     function salvarUltimoPedido(ped) {
         ultimoPedido = ped;
+        try { localStorage.setItem('ultimoPedido', JSON.stringify(ped)); } catch(e) {}
         try { sessionStorage.setItem('ultimoPedido', JSON.stringify(ped)); } catch(e) {}
         const btn = document.getElementById('btn-wa-salvo');
         const lbl = document.getElementById('lbl-wa-num');
@@ -382,6 +383,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             if (btn) btn.style.display = 'none';
             ultimoPedido = null;
             try { sessionStorage.removeItem('ultimoPedido'); } catch(e) {}
+            try { localStorage.removeItem('ultimoPedido'); } catch(e) {}
             form.removeEventListener('input', ocultar, true);
             form.removeEventListener('change', ocultar, true);
         };
@@ -391,7 +393,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
     function restaurarUltimoPedido() {
         try {
-            const salvo = sessionStorage.getItem('ultimoPedido');
+            var salvo = sessionStorage.getItem('ultimoPedido');
+            if (!salvo) salvo = localStorage.getItem('ultimoPedido');
             if (!salvo) return;
             const p = JSON.parse(salvo);
             if (!p || !p.numero) return;
@@ -420,9 +423,18 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
     });
 
     function abrirWhatsApp(numeroWhats, msg) {
-        const base = `https://web.whatsapp.com/send?phone=${numeroWhats}&text=${encodeURIComponent(msg)}`;
+        const base = 'https://web.whatsapp.com/send?phone=' + numeroWhats + '&text=' + encodeURIComponent(msg);
+        const waMobile = 'whatsapp://send?phone=' + numeroWhats + '&text=' + encodeURIComponent(msg);
         const nova = window.open(base, '_blank');
-        if (!nova) window.location.href = base;
+        if (!nova || typeof nova === 'undefined') {
+            var link = document.createElement('a');
+            link.href = base;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     }
 
     function enviarWhatsAppSalvo() {
