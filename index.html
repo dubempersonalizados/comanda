@@ -424,16 +424,10 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
 
     function abrirWhatsApp(numeroWhats, msg) {
         const base = 'https://web.whatsapp.com/send?phone=' + numeroWhats + '&text=' + encodeURIComponent(msg);
-        const waMobile = 'whatsapp://send?phone=' + numeroWhats + '&text=' + encodeURIComponent(msg);
-        const nova = window.open(base, '_blank');
-        if (!nova || typeof nova === 'undefined') {
-            var link = document.createElement('a');
-            link.href = base;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ tipo: 'abrirWhatsApp', url: base }, '*');
+        } else {
+            window.open(base, '_blank');
         }
     }
 
@@ -443,6 +437,11 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         if (!fone) { alert("Pedido sem contato cadastrado."); return; }
         const msg = montarMensagemPedido(ultimoPedido);
         abrirWhatsApp(fone, msg);
+        ultimoPedido = null;
+        try { sessionStorage.removeItem('ultimoPedido'); } catch(e) {}
+        try { localStorage.removeItem('ultimoPedido'); } catch(e) {}
+        const btn = document.getElementById('btn-wa-salvo');
+        if (btn) btn.style.display = 'none';
     }
 
     function copiarMensagem() {
