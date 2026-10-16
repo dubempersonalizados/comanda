@@ -73,9 +73,34 @@
         .btn-wa { background: var(--whatsapp); }
         .btn-print { background: #34495e; }
 
+        #marca-dagua-evento { display: none; }
+        #marca-dagua-evento span {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 120px;
+            font-weight: 900;
+            letter-spacing: 14px;
+            color: rgba(231, 76, 60, 0.22);
+            border: 8px solid rgba(231, 76, 60, 0.22);
+            border-radius: 25px;
+            padding: 8px 45px;
+            white-space: nowrap;
+            transform: rotate(-30deg);
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
         @media print { 
             .no-print { display: none !important; } 
             .container { box-shadow: none; width: 100%; padding: 0; border-radius: 0; }
+            body.evento-marcado #marca-dagua-evento {
+                display: flex;
+                position: fixed;
+                top: 0; left: 0; right: 0; bottom: 0;
+                align-items: center;
+                justify-content: center;
+                z-index: 2147483647;
+                pointer-events: none;
+            }
         }
     </style>
 </head>
@@ -183,13 +208,15 @@
     </div>
 </div>
 
+<div id="marca-dagua-evento" aria-hidden="true"><span>EVENTO</span></div>
+
 <script>
     function escaparHtml(s) {
         if (s == null) return '';
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbzTXF739D8RtnrYHin8ybAshJHv_XRvuvOx95YUBQp0b_iZzZXfEr3SEDfwOBmRC6qehg/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzc1klnHZV5v2bPCcoK7Cz7UPc5cMJtrBYgMuLFIfp-2JCRNW22YgM-TkLyt1BXiCYjyA/exec';
 
     // ⚙️ Prazos em dias úteis — também configuráveis na tela do formulário (persistem no navegador)
     let PRAZO_PRODUCAO_DIAS = 5;
@@ -312,6 +339,11 @@
         let s = 0; document.querySelectorAll('.qtd').forEach(q => s += (parseInt(q.value) || 0));
         document.getElementById('total-geral').innerText = s;
     }));
+
+    function atualizarMarcaDaguaEvento() {
+        const sel = document.getElementById('costura');
+        document.body.classList.toggle('evento-marcado', !!sel && sel.value === 'Evento');
+    }
 
     function gerarPDF() {
         const num = document.getElementById('display-numero').innerText;
@@ -678,6 +710,7 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
             btn.classList.remove('btn-loading');
             document.getElementById('formPedido').reset();
             document.getElementById('total-geral').innerText = "0";
+            atualizarMarcaDaguaEvento();
             calcFin();
             inicializarDatas();
             setTimeout(armarOcultarAposEdicao, 100);
@@ -779,6 +812,8 @@ Em caso de reembolso, somente após 10 dias úteis do vencimento do pedido.`;
         document.getElementById('pagamentos').addEventListener('change', evitarFormaDuplicada);
         atualizarDatalistClientes();
         calcFin();
+        atualizarMarcaDaguaEvento();
+        document.getElementById('costura').addEventListener('change', atualizarMarcaDaguaEvento);
         restaurarUltimoPedido();
         const form = document.getElementById('formPedido');
         form.addEventListener('input', marcarSujo, true);
